@@ -2,3 +2,10 @@
 ros2/install
 ros2/build
 ros2/log
+
+# Latex output
+latex/texfiles/*.aux
+latex/texfiles/*.log
+latex/texfiles/*.out
+latex/texfiles/*.pdf
+latex/texfiles/*.synctex.gz
