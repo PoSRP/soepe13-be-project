@@ -9,3 +9,6 @@ latex/texfiles/*.log
 latex/texfiles/*.out
 latex/texfiles/*.pdf
 latex/texfiles/*.synctex.gz
+
+# HTML version of README
+README.html
