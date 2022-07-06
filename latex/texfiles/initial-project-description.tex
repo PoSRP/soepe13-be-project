@@ -1,0 +1,95 @@
+\section{Initial project description}
+
+This project will focus on extending the functionality of the Simple Open EtherCAT Master [SOEM] library inside a ROS2 environment. 
+
+\noindent
+SOEM: \url{https://github.com/OpenEtherCATsociety/soem} 
+
+\subsection{Phase 1}
+\subsubsection{Description}
+
+\noindent
+Developing a ROS2 Node to serve as an EtherCAT Master using the SOEM library. The Node would be responsible for the following:  
+
+\begin{itemize}[nosep]
+	\item Control of the EtherCAT Finite State Machine [FSM].
+	\item Control of slave CiA-402 FSMs.
+	\item Providing Messages, Actions, and Services on the ROS2 network from the EtherCAT network, to facilitate reading and writing to the EtherCAT network parameters. 
+\end{itemize}
+
+\noindent
+Developing an RQt integrated explorer for the parameters presented by the EtherCAT Master Node. It would provide the following:
+
+\begin{itemize}[nosep]
+	\item Ability to select specific slave parameters and collate them in a collected view.
+	\item Ability to view and set parameters through the collected view.
+\end{itemize}
+
+\noindent
+Developing an RQt integrated control panel for the EtherCAT server Node. It would provide the following:
+
+\begin{itemize}[nosep]
+	\item Ability to send each specific state changing command to the network or specific slave.
+	\item Ability to select network or specific slave state and have it automatically change.
+	\item Ability to view the state of each part of the EtherCAT network.
+\end{itemize}
+
+\subsubsection{Investigation}
+
+\begin{itemize}[nosep]
+	\item How to achieve easy ROS2 integration of various EtherCAT drives compliant to the CiA-402 communication profile.  
+	\item How to fascilitate updating of EtherCAT network parameters through a ROS2 integrated interface.  
+	\item 
+\end{itemize}
+
+\subsubsection{Experimentation} 
+
+\begin{itemize}[nosep]
+	\item Connecting devices from different manufacturers and verifying discovery results against manufacturer specifications. 
+	\item Setting and verifying network parameters through a basic interface.
+\end{itemize}
+
+\subsubsection{Components}
+
+\begin{itemize}[nosep]
+	\item ROS2 EtherCAT Server Node
+	\item RQt Network Parameter Explorer 
+	\item RQt Network and Slave FSM Controls
+\end{itemize}
+
+\subsection{Phase 2}
+\subsubsection{Description}
+
+\noindent
+Developing a generalized quality parameter for evaluating movement profiles and developing a generalized procedure for estimating setup friction within the CiA-402 profile, if possible.
+
+\noindent
+Developing an interface for running predefined movement profiles. It would provide the following:
+
+\begin{itemize}[nosep]
+	\item Planning of typical motion profiles (synchronous). 
+	\item Assignment of slave(s) to run during movement. 
+	\item Graphing of the expected versus achieved movement. 
+	\item Information about expected and achieved movements.
+\end{itemize}
+
+\subsubsection{Investigation}
+
+\begin{itemize}[nosep]
+	\item How to quantify the quality of an achieved movement profile.  
+	\item How to generalize friction estimation using CiA-402.  
+\end{itemize}
+
+\subsubsection{Experimentation}
+
+\begin{itemize}[nosep]
+	\item Examination using disturbed vs undisturbed drive movement.  
+	\item Comparison of friction values calculated using different methods.  
+\end{itemize}
+
+\subsubsection{Components}
+
+\begin{itemize}[nosep]
+	\item RQt Profile Movement Control Panel
+	\item RQt EtherCAT CiA-402 Compliance Tester
+\end{itemize}
