@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as Xet
+from typing import List
 
 print_debug = True
 
@@ -66,6 +67,19 @@ class NodeHasNoAttributesException(Exception):
         super().__init__(self.message)
 
 
+def assert_node_children_and_attributes(xml_node: Xet.Element, has_child=True, has_attr=True, ignore_child=False, ignore_attr=False):
+    if not ignore_child:
+        if has_child and not len(xml_node):
+            raise NodeHasNoChildrenException(None, xml_node)
+        elif not has_child and len(xml_node):
+            raise NodeHasChildrenException(None, xml_node)
+    if not ignore_attr:
+        if has_attr and not len(xml_node.attrib):
+            raise NodeHasNoAttributesException(None, xml_node)
+        elif not has_attr and len(xml_node.attrib):
+            raise NodeHasAttributesException(None, xml_node)
+
+
 def print_node(xml_node):
     print(str_node(xml_node))
 
@@ -89,26 +103,99 @@ class SubDataType:
         self.flags = {}
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "SubItem":
+            raise TagException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
+        for child in xml_node:
+            if child.tag == "SubIdx":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.sub_idx = child.text
+            elif child.tag == "Name":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.name = child.text
+            elif child.tag == "Type":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.type = child.text
+            elif child.tag == "BitSize":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.bit_size = child.text
+            elif child.tag == "BitOffs":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.bit_offs = child.text
+            elif child.tag == "Flags":
+                assert_node_children_and_attributes(child, has_attr=False)
+                for grand_child in child:
+                    assert_node_children_and_attributes(grand_child, has_child=False, has_attr=False)
+                    self.flags[grand_child.tag] = grand_child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class DataType:
     def __init__(self):
         self.name = ""
         self.bit_size = ""
-        self.sub_items = []
+        self.base_type = ""
+        self.array_lower_bound = ""
+        self.array_elements = ""
+        self.sub_items: List[SubDataType] = []
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "DataType":
+            raise TagException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
+
+        for child in xml_node:
+            if child.tag == "Name":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.name = child.text
+            elif child.tag == "BitSize":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.bit_size = child.text
+            elif child.tag == "SubItem":
+                sub_item = SubDataType()
+                sub_item.xml_parse(child)
+                self.sub_items.append(sub_item)
+            elif child.tag == "BaseType":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.base_type = child.text
+            elif child.tag == "ArrayInfo":
+                assert_node_children_and_attributes(child, has_attr=False)
+                for grand_child in child:
+                    if grand_child.tag == "LBound":
+                        self.array_lower_bound = grand_child.text
+                    elif grand_child.tag == "Elements":
+                        self.array_elements = grand_child.text
+                    else:
+                        raise ChildTagException(self, child, grand_child)
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class InfoSubItem:
     def __init__(self):
         self.name = ""
-        self.info = []
+        self.info = {}
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "SubItem":
+            raise TagException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
+
+        for child in xml_node:
+            if child.tag == "Name":
+                self.name = child.text
+            elif child.tag == "Info":
+                if not len(child):
+                    raise NodeHasNoChildrenException(self, child)
+                for grand_child in child:
+                    if len(grand_child):
+                        raise NodeHasChildrenException(self, grand_child)
+                    if len(grand_child.attrib):
+                        raise NodeHasAttributesException(self, grand_child)
+                    self.info[grand_child.tag] = grand_child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class DictionaryObject:
@@ -117,33 +204,128 @@ class DictionaryObject:
         self.name = ""
         self.type = ""
         self.bit_size = ""
-        self.info = []
+        self.info: List[InfoSubItem] = []
         self.flags = {}
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Object":
+            raise TagException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
+
+        for child in xml_node:
+            if child.tag == "Index":
+                self.index = child.text
+            elif child.tag == "Name":
+                self.name = child.text
+            elif child.tag == "Type":
+                self.type = child.text
+            elif child.tag == "BitSize":
+                self.bit_size = child.text
+            elif child.tag == "Info":
+                assert_node_children_and_attributes(child, has_attr=False, ignore_child=True)
+                for grand_child in child:
+                    if grand_child.tag == "SubItem":
+                        info_sub_item = InfoSubItem()
+                        info_sub_item.xml_parse(grand_child)
+                        self.info.append(info_sub_item)
+                    elif grand_child.tag in ["DefaultData", "DefaultValue"]:
+                        default_info_item = InfoSubItem()
+                        default_info_item.name = grand_child.tag
+                        default_info_item.info[grand_child.tag] = grand_child.text
+                        self.info.append(default_info_item)
+                    else:
+                        raise ChildTagException(self, child, grand_child)
+
+            elif child.tag == "Flags":
+                assert_node_children_and_attributes(child, has_attr=False)
+                for grand_child in child:
+                    self.flags[grand_child.tag] = grand_child.text
+
+            else:
+                raise ChildTagException(self, xml_node, child)
+
+
+class Dictionary:
+    def __init__(self):
+        self.data_types: List[DataType] = []
+        self.objects: List[DictionaryObject] = []
+
+    def xml_parse(self, xml_node):
+        if xml_node.tag != "Dictionary":
+            raise TagException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
+
+        for child in xml_node:
+            if child.tag == "DataTypes":
+                assert_node_children_and_attributes(child, has_attr=False)
+                for grand_child in child:
+                    if grand_child.tag == "DataType":
+                        data_type = DataType()
+                        data_type.xml_parse(grand_child)
+                        self.data_types.append(data_type)
+                    else:
+                        raise ChildTagException(self, child, grand_child)
+
+            elif child.tag == "Objects":
+                assert_node_children_and_attributes(child, has_attr=False)
+                for grand_child in child:
+                    if grand_child.tag == "Object":
+                        dictionary_object = DictionaryObject()
+                        dictionary_object.xml_parse(grand_child)
+                        self.objects.append(dictionary_object)
+                    else:
+                        raise ChildTagException(self, child, grand_child)
+
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class Profile:
     def __init__(self):
         self.profile_no = ""
-        self.data_types = []
-        self.dictionary_objects = []
+        self.dictionary = Dictionary()
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Profile":
+            raise TagException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
+
+        for child in xml_node:
+            if child.tag == "ProfileNo":
+                assert_node_children_and_attributes(child, has_child=False, has_attr=False)
+                self.profile_no = child.text
+            elif child.tag == "Dictionary":
+                self.dictionary.xml_parse(child)
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
-class Entry:
+class PdoEntry:
     def __init__(self):
         self.index = ""
-        self.subindex = ""
-        self.bitlen = ""
+        self.sub_index = ""
+        self.bit_len = ""
         self.name = ""
         self.data_type = ""
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Entry":
+            raise TagException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
+
+        for child in xml_node:
+            if child.tag == "Index":
+                self.index = child.text
+            elif child.tag == "SubIndex":
+                self.sub_index = child.text
+            elif child.tag == "BitLen":
+                self.bit_len = child.text
+            elif child.tag == "Name":
+                self.name = child.text
+            elif child.tag == "DataType":
+                self.data_type = child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class PDO:
@@ -152,10 +334,38 @@ class PDO:
         self.sm = ""
         self.index = ""
         self.name = ""
-        self.entries = []
+        self.entries: List[PdoEntry] = []
+        self.excludes = {}
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag not in ["RxPdo", "TxPdo"]:
+            raise TagException(self, xml_node)
+
+        if not len(xml_node.attrib):
+            raise NodeHasNoAttributesException(self, xml_node)
+        for attr in xml_node.attrib:
+            if attr == "Fixed":
+                self.fixed = xml_node.attrib[attr]
+            elif attr == "Sm":
+                self.sm = xml_node.attrib[attr]
+            else:
+                raise NodeAttrException(self, xml_node, attr)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            if child.tag == "Index":
+                self.index = child.text
+            elif child.tag == "Name":
+                self.name = child.text
+            elif child.tag == "Entry":
+                entry = PdoEntry()
+                entry.xml_parse(child)
+                self.entries.append(entry)
+            elif child.tag == "Exclude":
+                self.excludes[child.tag] = child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class RxPDO(PDO):
@@ -181,21 +391,11 @@ class DeviceSM:
         self.enable = ""
         self.watchdog = ""
 
-    def __str__(self):
-        return f"Device SM - {self.name}\n" \
-               f"  Min size: {self.min_size}\n" \
-               f"  Max size: {self.max_size}\n" \
-               f"  Default size: {self.default_size}\n" \
-               f"  Start address: {self.start_address}\n" \
-               f"  Control byte: {self.control_byte}\n" \
-               f"  Enable: {self.enable}\n" \
-               f"  Watchdog: {self.watchdog}"
-
     def xml_parse(self, xml_node):
         if xml_node.tag != "Sm":
             raise TagException(self, xml_node)
-
         self.name = xml_node.text
+
         if len(xml_node):
             raise NodeHasChildrenException(self, xml_node)
 
@@ -220,15 +420,73 @@ class DeviceSM:
                 raise NodeAttrException(self, xml_node, attr)
 
 
+class CoEInitCmd:
+    def __init__(self):
+        self.transition = ""
+        self.index = ""
+        self.sub_index = ""
+        self.data = ""
+        self.comment = ""
+
+    def xml_parse(self, xml_node):
+        if xml_node.tag != "InitCmd":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            if child.tag == "Transition":
+                self.transition = child.text
+            elif child.tag == "Index":
+                self.index = child.text
+            elif child.tag == "SubIndex":
+                self.sub_index = child.text
+            elif child.tag == "Data":
+                self.data = child.text
+            elif child.tag == "Comment":
+                self.comment = child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
+
+
 class CoeMailbox:
     def __init__(self):
         self.sdo_info = ""
         self.pdo_assign = ""
         self.pdo_config = ""
         self.complete_access = ""
+        self.init_cmds: List[CoEInitCmd] = []
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "CoE":
+            raise TagException(self, xml_node)
+
+        # It may or may not have ImitCmd children
+        if len(xml_node):
+            for child in xml_node:
+                if child.tag == "InitCmd":
+                    init_cmd = CoEInitCmd()
+                    init_cmd.xml_parse(child)
+                    self.init_cmds.append(init_cmd)
+                else:
+                    raise ChildTagException(self, xml_node, child)
+
+        if not len(xml_node.attrib):
+            raise NodeHasNoAttributesException(self, xml_node)
+        for attr in xml_node.attrib:
+            if attr == "SdoInfo":
+                self.sdo_info = xml_node.attrib[attr]
+            elif attr == "PdoAssign":
+                self.pdo_assign = xml_node.attrib[attr]
+            elif attr == "PdoConfig":
+                self.pdo_config = xml_node.attrib[attr]
+            elif attr == "CompleteAccess":
+                self.complete_access = xml_node.attrib[attr]
+            else:
+                raise NodeAttrException(self, xml_node, attr)
 
 
 class Mailbox:
@@ -238,7 +496,23 @@ class Mailbox:
         self.coe = CoeMailbox()
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Mailbox":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            if child.tag == "EoE":
+                self.eoe = child.text
+            elif child.tag == "CoE":
+                self.coe.xml_parse(child)
+            elif child.tag == "FoE":
+                self.foe = child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class OpMode:
@@ -251,15 +525,51 @@ class OpMode:
         self.shift_time_sync0 = ""
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "OpMode":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            if child.tag == "Name":
+                self.name = child.text
+            elif child.tag == "Desc":
+                self.desc = child.text
+            elif child.tag == "AssignActivate":
+                self.assign_activate = child.text
+            elif child.tag == "CycleTimeSync0":
+                self.cycle_time_sync0 = child.text
+                if "Factor" in child.attrib.keys():
+                    self.cycle_time_sync0_factor = child.attrib["Factor"]
+            elif child.tag == "ShiftTimeSync0":
+                self.shift_time_sync0 = child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class DC:
     def __init__(self):
-        self.op_modes = []
+        self.op_modes: List[OpMode] = []
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Dc":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            if child.tag == "OpMode":
+                op_mode = OpMode()
+                op_mode.xml_parse(child)
+                self.op_modes.append(op_mode)
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class EEPROMCategory:
@@ -268,7 +578,21 @@ class EEPROMCategory:
         self.data = ""
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Category":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            if child.tag == "CatNo":
+                self.cat_no = child.text
+            elif child.tag == "Data":
+                self.data = child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class EEPROM:
@@ -276,10 +600,30 @@ class EEPROM:
         self.byte_size = ""
         self.config_data = ""
         self.boot_strap = ""
-        self.categories = []
+        self.categories: List[EEPROMCategory] = []
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Eeprom":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            if child.tag == "ByteSize":
+                self.byte_size = child.text
+            elif child.tag == "ConfigData":
+                self.config_data = child.text
+            elif child.tag == "BootStrap":
+                self.boot_strap = child.text
+            elif child.tag == "Category":
+                eeprom_category = EEPROMCategory()
+                eeprom_category.xml_parse(child)
+                self.categories.append(eeprom_category)
+            else:
+                raise ChildTagException(self, xml_node, child)
 
 
 class DeviceType:
@@ -289,7 +633,22 @@ class DeviceType:
         self.revision_no = ""
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Type":
+            raise TagException(self, xml_node)
+        self.type = xml_node.text
+
+        if len(xml_node):
+            raise NodeHasChildrenException(self, xml_node)
+
+        if not len(xml_node.attrib):
+            raise NodeHasNoAttributesException(self, xml_node)
+        for attr in xml_node.attrib:
+            if attr == "ProductCode":
+                self.product_code = xml_node.attrib[attr]
+            elif attr == "RevisionNo":
+                self.revision_no = xml_node.attrib[attr]
+            else:
+                raise NodeAttrException(self, xml_node, attr)
 
 
 class DeviceName:
@@ -298,23 +657,54 @@ class DeviceName:
         self.lc_id = ""
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Name":
+            raise TagException(self, xml_node)
+        self.name = xml_node.text
+
+        if len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+
+        if not len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+        for attr in xml_node.attrib:
+            if attr == "LcId":
+                self.lc_id = xml_node.attrib[attr]
+            else:
+                raise NodeAttrException(self, xml_node, attr)
 
 
 class DeviceInfo:
     def __init__(self):
-        pass
+        self.registers = {}
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "Info":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            self.registers[child.tag] = child.text
 
 
 class DeviceESC:
     def __init__(self):
-        pass
+        self.registers = {}
 
     def xml_parse(self, xml_node):
-        pass
+        if xml_node.tag != "ESC":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            self.registers[child.tag] = child.text
 
 
 class Device:
@@ -323,12 +713,12 @@ class Device:
         self.name = DeviceName()
         self.group_type = ""
         self.profile = Profile()
-        self.fmmu = []
-        self.sm = []
+        self.fmmu: List[str] = []
+        self.sm: List[DeviceSM] = []
         self.su = ""
-        self.mbx = []
-        self.rxpdo = []
-        self.txpdo = []
+        self.mbx: List[Mailbox] = []
+        self.rxpdo: List[RxPDO] = []
+        self.txpdo: List[TxPDO] = []
         self.dc = DC()
         self.eeprom = EEPROM()
         self.image_16x14 = ""
@@ -422,18 +812,6 @@ class Group:
         self.sort_order = ""
         self.name_lc_id = ""
 
-    def __str__(self):
-        img_data = self.image_data
-        s = ""
-        while img_data:
-            s += f"    {img_data[:58]}\n"
-            img_data = img_data[58:]
-        if s[-1] == "\n":
-            s = s[0:-1]
-        return f"Group - {self.name}\n" \
-               f"  Type: {self.type}\n" \
-               f"  Image data 16x14:\n{s}"
-
     def xml_parse(self, xml_node):
         if xml_node.tag != "Group":
             raise TagException(self, xml_node)
@@ -459,10 +837,36 @@ class Group:
                 raise ChildTagException(self, xml_node, child)
 
 
+class Vendor:
+    def __init__(self):
+        self.id = ""
+        self.name = ""
+        self.image_data = ""
+
+    def xml_parse(self, xml_node):
+        if xml_node.tag != "Vendor":
+            raise TagException(self, xml_node)
+
+        if len(xml_node.attrib):
+            raise NodeHasAttributesException(self, xml_node)
+
+        if not len(xml_node):
+            raise NodeHasNoChildrenException(self, xml_node)
+        for child in xml_node:
+            if child.tag == "Id":
+                self.id = child.text
+            elif child.tag == "Name":
+                self.name = child.text
+            elif child.tag == "ImageData16x14":
+                self.image_data = child.text
+            else:
+                raise ChildTagException(self, xml_node, child)
+
+
 class Description:
     def __init__(self):
-        self.groups = []
-        self.devices = []
+        self.groups: List[Group] = []
+        self.devices: List[Device] = []
         self.vendor = Vendor()
 
     def xml_parse(self, xml_node):
@@ -498,44 +902,6 @@ class Description:
                                 raise ChildTagException(self, grand_child, grand_grand_child)
                     else:
                         raise ChildTagException(self, child, grand_child)
-            else:
-                raise ChildTagException(self, xml_node, child)
-
-
-class Vendor:
-    def __init__(self):
-        self.id = ""
-        self.name = ""
-        self.image_data = ""
-
-    def __str__(self):
-        img_data = self.image_data
-        s = ""
-        while img_data:
-            s += f"    {img_data[:58]}\n"
-            img_data = img_data[58:]
-        if s[-1] == "\n":
-            s = s[0:-1]
-        return f"Vendor - {self.name}\n" \
-               f"  ID: {self.id}\n" \
-               f"  Image data 16x14:\n{s}"
-
-    def xml_parse(self, xml_node):
-        if xml_node.tag != "Vendor":
-            raise TagException(self, xml_node)
-
-        if len(xml_node.attrib):
-            raise NodeHasAttributesException(self, xml_node)
-
-        if not len(xml_node):
-            raise NodeHasNoChildrenException(self, xml_node)
-        for child in xml_node:
-            if child.tag == "Id":
-                self.id = child.text
-            elif child.tag == "Name":
-                self.name = child.text
-            elif child.tag == "ImageData16x14":
-                self.image_data = child.text
             else:
                 raise ChildTagException(self, xml_node, child)
 
