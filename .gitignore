@@ -3,12 +3,19 @@ ros2/install
 ros2/build
 ros2/log
 
+# Python caches
+**/__pycache__/*
+
+# Pycharm project file
+.idea/*
+
 # Latex output
 latex/texfiles/*.aux
 latex/texfiles/*.log
 latex/texfiles/*.out
 latex/texfiles/*.pdf
 latex/texfiles/*.synctex.gz
+latex/texfiles/*.toc
 
 # HTML version of README
 README.html
