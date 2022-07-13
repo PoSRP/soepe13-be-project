@@ -1,0 +1,19 @@
+<library path="lib/rqt_ecat_dashboard">
+  <class name="Dashboard" type="rqt_ecat_dashboard.ecat_dashboard.Dashboard" base_class_type="rqt_gui_py::Plugin">
+    <description>
+      A Python GUI plugin for controlling the EtherCAT Master Server node.
+    </description>
+    <qtgui>
+      <group>
+        <label>EtherCAT</label>
+        <icon type="theme">folder</icon>
+        <statustip>Plugins related to EtherCAT.</statustip>
+      </group>
+      <label>EtherCAT Dashboard</label>
+      <icon type="theme">mail-read</icon>
+      <statustip>
+        A Python GUI plugin for controlling the EtherCAT Master Server node.
+      </statustip>
+    </qtgui>
+  </class>
+</library>

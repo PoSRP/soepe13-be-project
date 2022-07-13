@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ecat-server</name>
+  <name>ecat_server</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="sr@todo.todo">sr</maintainer>
+  <maintainer email="soepe13@student.sdu.dk">sr</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
