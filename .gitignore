@@ -1,21 +1,27 @@
 # ROS2 log/install/build directory
-ros2/install
-ros2/build
-ros2/log
+ros2/install/
+ros2/build/
+ros2/log/
 
 # Python caches
-**/__pycache__/*
+**/__pycache__/
 
 # Pycharm project file
-.idea/*
+.idea/
+
+# Eclipse project files
+ros2/**/build
+ros2/**/.cproject
+ros2/**/.project
+ros2/**/.settings/
 
 # Latex output
-latex/texfiles/*.aux
-latex/texfiles/*.log
-latex/texfiles/*.out
-latex/texfiles/*.pdf
-latex/texfiles/*.synctex.gz
-latex/texfiles/*.toc
+latex/**/*.aux
+latex/**/*.log
+latex/**/*.out
+latex/**/*.pdf
+latex/**/*.synctex.gz
+latex/**/*.toc
 
 # HTML version of README
 README.html
