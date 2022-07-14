@@ -1,4 +1,5 @@
 from setuptools import setup
+from glob import glob
 
 package_name = 'rqt_ecat_dashboard'
 
@@ -12,6 +13,10 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name + '/resource',
             ['resource/ecat_dashboard.ui']),
+        ('share/' + package_name + '/resource',
+            ['resource/ecat_devices.ui']),
+        ('share/' + package_name + '/resource/device-descriptions',
+            glob('resource/device-descriptions/*')),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name, ['plugin.xml']),
     ],

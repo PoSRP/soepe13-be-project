@@ -864,10 +864,12 @@ class Vendor:
 
 
 class Description:
-    def __init__(self):
+    def __init__(self, esi_file):
         self.groups: List[Group] = []
         self.devices: List[Device] = []
         self.vendor = Vendor()
+        self._root = Xet.parse(esi_file).getroot()
+        self.xml_parse(self._root)
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "EtherCATInfo":
@@ -908,12 +910,7 @@ class Description:
 
 def main():
     dprint("Hello")
-
-    tree = Xet.parse("../device-descriptions/elmo-ecat-desc-00010420.xml")
-    root = tree.getroot()
-
-    device_description = Description()
-    device_description.xml_parse(root)
+    device_description = Description("../device-descriptions/elmo-ecat-desc-00010420.xml")
 
 
 if __name__ == "__main__":

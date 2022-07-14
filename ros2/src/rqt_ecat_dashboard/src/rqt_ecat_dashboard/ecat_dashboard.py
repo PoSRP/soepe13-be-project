@@ -1,19 +1,20 @@
 from qt_gui.plugin import Plugin
-from python_qt_binding.QtWidgets import QWidget
+from .ecat_dashboard_widget import EcatDashboardWidget
 
 
-class Dashboard(Plugin):
+class EcatDashboard(Plugin):
     def __init__(self, context):
-        super(Dashboard, self).__init__(context)
-        self.setObjectName('Dashboard')
-        self._widget = QWidget()
+        super(EcatDashboard, self).__init__(context)
+        self.setObjectName('EcatDashboard')
+        self._widget = EcatDashboardWidget()
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
         context.add_widget(self._widget)
 
     def shutdown_plugin(self):
-        self._widget.cleanup_browsers_on_close()
+        # self._widget.cleanup_browsers_on_close()
+        pass
 
     def save_settings(self, plugin_settings, instance_settings):
         # instance_settings.set_value(k, v)
