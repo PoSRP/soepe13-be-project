@@ -1,7 +1,9 @@
+import typing
 import xml.etree.ElementTree as Xet
 from typing import List
-
-print_debug = True
+import os
+import shutil
+from textwrap import dedent
 
 
 class TagException(Exception):
@@ -88,19 +90,30 @@ def str_node(xml_node):
     return f"Node tag: {xml_node.tag} - Node text: {xml_node.text} - Node attrib: {xml_node.attrib}"
 
 
-def dprint(msg: str):
-    if print_debug:
-        print(msg)
+class FlagType:
+    name = ''
+    value = ''
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
 
 
 class SubDataType:
+    sub_idx = ""
+    name = ""
+    data_type = ""
+    bit_size = ""
+    bit_offs = ""
+    flags: List[FlagType] = []
+
     def __init__(self):
         self.sub_idx = ""
         self.name = ""
-        self.type = ""
+        self.data_type = ""
         self.bit_size = ""
         self.bit_offs = ""
-        self.flags = {}
+        self.flags = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "SubItem":
@@ -115,7 +128,7 @@ class SubDataType:
                 self.name = child.text
             elif child.tag == "Type":
                 assert_node_children_and_attributes(child, has_child=False, has_attr=False)
-                self.type = child.text
+                self.data_type = child.text
             elif child.tag == "BitSize":
                 assert_node_children_and_attributes(child, has_child=False, has_attr=False)
                 self.bit_size = child.text
@@ -126,19 +139,26 @@ class SubDataType:
                 assert_node_children_and_attributes(child, has_attr=False)
                 for grand_child in child:
                     assert_node_children_and_attributes(grand_child, has_child=False, has_attr=False)
-                    self.flags[grand_child.tag] = grand_child.text
+                    self.flags.append(FlagType(grand_child.tag, grand_child.text))
             else:
                 raise ChildTagException(self, xml_node, child)
 
 
 class DataType:
+    name = ""
+    bit_size = ""
+    base_type = ""
+    array_lower_bound = ""
+    array_elements = ""
+    sub_items: List[SubDataType] = []
+
     def __init__(self):
         self.name = ""
         self.bit_size = ""
         self.base_type = ""
         self.array_lower_bound = ""
         self.array_elements = ""
-        self.sub_items: List[SubDataType] = []
+        self.sub_items = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "DataType":
@@ -172,10 +192,24 @@ class DataType:
                 raise ChildTagException(self, xml_node, child)
 
 
+class InfoEndItem:
+    name = ""
+    value = ""
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+
 class InfoSubItem:
+    name = ""
+    value = ""
+    info: List[InfoEndItem] = []
+
     def __init__(self):
         self.name = ""
-        self.info = {}
+        self.value = ""
+        self.info = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "SubItem":
@@ -189,23 +223,29 @@ class InfoSubItem:
                 if not len(child):
                     raise NodeHasNoChildrenException(self, child)
                 for grand_child in child:
-                    if len(grand_child):
-                        raise NodeHasChildrenException(self, grand_child)
-                    if len(grand_child.attrib):
-                        raise NodeHasAttributesException(self, grand_child)
-                    self.info[grand_child.tag] = grand_child.text
+                    assert_node_children_and_attributes(grand_child, has_child=False, has_attr=False)
+                    if grand_child.tag not in ["DefaultValue", "DefaultData"]:
+                        raise TagException(self, grand_child)
+                    self.info.append(InfoEndItem(grand_child.tag, grand_child.text))
             else:
                 raise ChildTagException(self, xml_node, child)
 
 
 class DictionaryObject:
+    index = ""
+    name = ""
+    data_type = ""
+    bit_size = ""
+    info: List[InfoSubItem] = []
+    flags: List[FlagType] = []
+
     def __init__(self):
         self.index = ""
         self.name = ""
-        self.type = ""
+        self.data_type = ""
         self.bit_size = ""
-        self.info: List[InfoSubItem] = []
-        self.flags = {}
+        self.info = []
+        self.flags = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "Object":
@@ -218,7 +258,7 @@ class DictionaryObject:
             elif child.tag == "Name":
                 self.name = child.text
             elif child.tag == "Type":
-                self.type = child.text
+                self.data_type = child.text
             elif child.tag == "BitSize":
                 self.bit_size = child.text
             elif child.tag == "Info":
@@ -231,7 +271,7 @@ class DictionaryObject:
                     elif grand_child.tag in ["DefaultData", "DefaultValue"]:
                         default_info_item = InfoSubItem()
                         default_info_item.name = grand_child.tag
-                        default_info_item.info[grand_child.tag] = grand_child.text
+                        default_info_item.value = grand_child.text
                         self.info.append(default_info_item)
                     else:
                         raise ChildTagException(self, child, grand_child)
@@ -239,16 +279,20 @@ class DictionaryObject:
             elif child.tag == "Flags":
                 assert_node_children_and_attributes(child, has_attr=False)
                 for grand_child in child:
-                    self.flags[grand_child.tag] = grand_child.text
+                    assert_node_children_and_attributes(grand_child, has_child=False, has_attr=False)
+                    self.flags.append(FlagType(grand_child.tag, grand_child.text))
 
             else:
                 raise ChildTagException(self, xml_node, child)
 
 
 class Dictionary:
+    data_types: List[DataType] = []
+    objects: List[DictionaryObject] = []
+
     def __init__(self):
-        self.data_types: List[DataType] = []
-        self.objects: List[DictionaryObject] = []
+        self.data_types = []
+        self.objects = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "Dictionary":
@@ -281,6 +325,9 @@ class Dictionary:
 
 
 class Profile:
+    profile_no = ""
+    dictionary: Dictionary = Dictionary()
+
     def __init__(self):
         self.profile_no = ""
         self.dictionary = Dictionary()
@@ -301,6 +348,12 @@ class Profile:
 
 
 class PdoEntry:
+    index = ""
+    sub_index = ""
+    bit_len = ""
+    name = ""
+    data_type = ""
+
     def __init__(self):
         self.index = ""
         self.sub_index = ""
@@ -328,21 +381,38 @@ class PdoEntry:
                 raise ChildTagException(self, xml_node, child)
 
 
+class PdoExclude:
+    name = ''
+    value = ''
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+
 class PDO:
-    def __init__(self):
+    pdo_type = ""
+    fixed = ""
+    sm = ""
+    index = ""
+    name = ""
+    entries: List[PdoEntry] = []
+    excludes: List[PdoExclude] = []
+
+    def __init__(self, pdo_type):
+        self.pdo_type = pdo_type
         self.fixed = ""
         self.sm = ""
         self.index = ""
         self.name = ""
-        self.entries: List[PdoEntry] = []
-        self.excludes = {}
+        self.entries = []
+        self.excludes = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag not in ["RxPdo", "TxPdo"]:
             raise TagException(self, xml_node)
+        assert_node_children_and_attributes(xml_node)
 
-        if not len(xml_node.attrib):
-            raise NodeHasNoAttributesException(self, xml_node)
         for attr in xml_node.attrib:
             if attr == "Fixed":
                 self.fixed = xml_node.attrib[attr]
@@ -351,8 +421,6 @@ class PDO:
             else:
                 raise NodeAttrException(self, xml_node, attr)
 
-        if not len(xml_node):
-            raise NodeHasNoChildrenException(self, xml_node)
         for child in xml_node:
             if child.tag == "Index":
                 self.index = child.text
@@ -363,24 +431,21 @@ class PDO:
                 entry.xml_parse(child)
                 self.entries.append(entry)
             elif child.tag == "Exclude":
-                self.excludes[child.tag] = child.text
+                self.excludes.append(PdoExclude(child.tag, child.text))
             else:
                 raise ChildTagException(self, xml_node, child)
 
 
-class RxPDO(PDO):
-    def __init__(self):
-        self.type = "rx"
-        super().__init__()
-
-
-class TxPDO(PDO):
-    def __init__(self):
-        self.type = "tx"
-        super().__init__()
-
-
 class DeviceSM:
+    name = ""
+    min_size = ""
+    max_size = ""
+    default_size = ""
+    start_address = ""
+    control_byte = ""
+    enable = ""
+    watchdog = ""
+
     def __init__(self):
         self.name = ""
         self.min_size = ""
@@ -421,6 +486,12 @@ class DeviceSM:
 
 
 class CoEInitCmd:
+    transition = ""
+    index = ""
+    sub_index = ""
+    data = ""
+    comment = ""
+
     def __init__(self):
         self.transition = ""
         self.index = ""
@@ -453,12 +524,18 @@ class CoEInitCmd:
 
 
 class CoeMailbox:
+    sdo_info = ""
+    pdo_assign = ""
+    pdo_config = ""
+    complete_access = ""
+    init_cmds: List[CoEInitCmd] = []
+
     def __init__(self):
         self.sdo_info = ""
         self.pdo_assign = ""
         self.pdo_config = ""
         self.complete_access = ""
-        self.init_cmds: List[CoEInitCmd] = []
+        self.init_cmds = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "CoE":
@@ -490,6 +567,10 @@ class CoeMailbox:
 
 
 class Mailbox:
+    eoe = ""
+    foe = ""
+    coe: CoeMailbox = CoeMailbox()
+
     def __init__(self):
         self.eoe = ""
         self.foe = ""
@@ -516,6 +597,13 @@ class Mailbox:
 
 
 class OpMode:
+    name = ""
+    desc = ""
+    assign_activate = ""
+    cycle_time_sync0 = ""
+    cycle_time_sync0_factor = ""
+    shift_time_sync0 = ""
+
     def __init__(self):
         self.name = ""
         self.desc = ""
@@ -551,8 +639,10 @@ class OpMode:
 
 
 class DC:
+    op_modes: List[OpMode] = []
+
     def __init__(self):
-        self.op_modes: List[OpMode] = []
+        self.op_modes = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "Dc":
@@ -573,6 +663,9 @@ class DC:
 
 
 class EEPROMCategory:
+    cat_no = ""
+    data = ""
+
     def __init__(self):
         self.cat_no = ""
         self.data = ""
@@ -596,11 +689,16 @@ class EEPROMCategory:
 
 
 class EEPROM:
+    byte_size = ""
+    config_data = ""
+    boot_strap = ""
+    categories: List[EEPROMCategory] = []
+
     def __init__(self):
         self.byte_size = ""
         self.config_data = ""
         self.boot_strap = ""
-        self.categories: List[EEPROMCategory] = []
+        self.categories = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "Eeprom":
@@ -627,15 +725,19 @@ class EEPROM:
 
 
 class DeviceType:
+    device_type = ""
+    product_code = ""
+    revision_no = ""
+
     def __init__(self):
-        self.type = ""
+        self.device_type = ""
         self.product_code = ""
         self.revision_no = ""
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "Type":
             raise TagException(self, xml_node)
-        self.type = xml_node.text
+        self.device_type = xml_node.text
 
         if len(xml_node):
             raise NodeHasChildrenException(self, xml_node)
@@ -652,6 +754,9 @@ class DeviceType:
 
 
 class DeviceName:
+    name = ""
+    lc_id = ""
+
     def __init__(self):
         self.name = ""
         self.lc_id = ""
@@ -673,57 +778,77 @@ class DeviceName:
                 raise NodeAttrException(self, xml_node, attr)
 
 
+class DeviceRegister:
+    name = ""
+    value = ""
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+
 class DeviceInfo:
+    registers: List[DeviceRegister] = []
+
     def __init__(self):
-        self.registers = {}
+        self.registers = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "Info":
             raise TagException(self, xml_node)
-
-        if len(xml_node.attrib):
-            raise NodeHasAttributesException(self, xml_node)
-
-        if not len(xml_node):
-            raise NodeHasNoChildrenException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
         for child in xml_node:
-            self.registers[child.tag] = child.text
+            self.registers.append(DeviceRegister(child.tag, child.text))
 
 
-class DeviceESC:
+class DeviceEsc:
+    registers: List[DeviceRegister] = []
+
     def __init__(self):
-        self.registers = {}
+        self.registers = []
 
     def xml_parse(self, xml_node):
         if xml_node.tag != "ESC":
             raise TagException(self, xml_node)
-
-        if len(xml_node.attrib):
-            raise NodeHasAttributesException(self, xml_node)
-
-        if not len(xml_node):
-            raise NodeHasNoChildrenException(self, xml_node)
+        assert_node_children_and_attributes(xml_node, has_attr=False)
         for child in xml_node:
-            self.registers[child.tag] = child.text
+            self.registers.append(DeviceRegister(child.tag, child.text))
 
 
 class Device:
+    device_type: DeviceType = DeviceType()
+    name: DeviceName = DeviceName()
+    group_type = ""
+    profile: Profile = Profile()
+    fmmu: List[str] = []
+    sm: List[DeviceSM] = []
+    su = ""
+    mbx: List[Mailbox] = []
+    rxpdo: List[PDO] = []
+    txpdo: List[PDO] = []
+    dc: DC = DC()
+    eeprom: EEPROM = EEPROM()
+    image_16x14 = ""
+    info: DeviceInfo = DeviceInfo()
+    esc: DeviceEsc = DeviceEsc()
+    physics = ""
+
     def __init__(self):
-        self.type = DeviceType()
+        self.device_type = DeviceType()
         self.name = DeviceName()
         self.group_type = ""
         self.profile = Profile()
-        self.fmmu: List[str] = []
-        self.sm: List[DeviceSM] = []
+        self.fmmu = []
+        self.sm = []
         self.su = ""
-        self.mbx: List[Mailbox] = []
-        self.rxpdo: List[RxPDO] = []
-        self.txpdo: List[TxPDO] = []
+        self.mbx = []
+        self.rxpdo = []
+        self.txpdo = []
         self.dc = DC()
         self.eeprom = EEPROM()
         self.image_16x14 = ""
         self.info = DeviceInfo()
-        self.esc = DeviceESC()
+        self.esc = DeviceEsc()
         self.physics = ""
 
     def xml_parse(self, xml_node):
@@ -742,7 +867,7 @@ class Device:
             raise NodeHasNoChildrenException(self, xml_node)
         for child in xml_node:
             if child.tag == "Type":
-                self.type.xml_parse(child)
+                self.device_type.xml_parse(child)
             elif child.tag == "Name":
                 self.name.xml_parse(child)
             elif child.tag == "GroupType":
@@ -758,11 +883,11 @@ class Device:
             elif child.tag == "Su":
                 self.su = child.text
             elif child.tag == "RxPdo":
-                rxpdo = RxPDO()
+                rxpdo = PDO("rx")
                 rxpdo.xml_parse(child)
                 self.rxpdo.append(rxpdo)
             elif child.tag == "TxPdo":
-                txpdo = TxPDO()
+                txpdo = PDO("tx")
                 txpdo.xml_parse(child)
                 self.txpdo.append(txpdo)
             elif child.tag == "Mailbox":
@@ -784,6 +909,9 @@ class Device:
 
 
 class GroupName:
+    name = ""
+    lc_id = ""
+
     def __init__(self):
         self.name = ""
         self.lc_id = ""
@@ -805,8 +933,14 @@ class GroupName:
 
 
 class Group:
+    group_type = ""
+    name: GroupName = GroupName()
+    image_data = ""
+    sort_order = ""
+    name_lc_id = ""
+
     def __init__(self):
-        self.type = ""
+        self.group_type = ""
         self.name = GroupName()
         self.image_data = ""
         self.sort_order = ""
@@ -828,7 +962,7 @@ class Group:
             raise NodeHasNoChildrenException(self, xml_node)
         for child in xml_node:
             if child.tag == "Type":
-                self.type = child.text
+                self.group_type = child.text
             elif child.tag == "Name":
                 self.name.xml_parse(child)
             elif child.tag == "ImageData16x14":
@@ -838,6 +972,10 @@ class Group:
 
 
 class Vendor:
+    id = ""
+    name = ""
+    image_data = ""
+
     def __init__(self):
         self.id = ""
         self.name = ""
@@ -864,9 +1002,13 @@ class Vendor:
 
 
 class Description:
+    groups: List[Group] = []
+    devices: List[Device] = []
+    vendor: Vendor = Vendor()
+
     def __init__(self, esi_file):
-        self.groups: List[Group] = []
-        self.devices: List[Device] = []
+        self.groups = []
+        self.devices = []
         self.vendor = Vendor()
         self._root = Xet.parse(esi_file).getroot()
         self.xml_parse(self._root)
@@ -908,9 +1050,98 @@ class Description:
                 raise ChildTagException(self, xml_node, child)
 
 
+def class_to_ros_msg_recursive(cls, store):
+    """
+    Converts a class to ROS message definition files.
+    It will attempt to recurse into class-level members until composed of nested strings.
+    It does so based on annotation information, so full annotation is required.
+    :param cls: Root class to generate messages for
+    :param store: Generated message storage as {file_name: file_content}
+    :return: The generated messages as {file_name: file_content}
+    """
+
+    """ Things we reject messages for """
+    if not callable(cls):
+        raise Exception('This is not callable, which a raw class generally is .. ')
+    if cls in [str, list, dict, Xet.Element]:
+        raise Exception("Don't give me this kind of class: [str, list, dict, Xet.Element]. You gave: " +
+                        str(cls.__name__))
+    """ Filename """
+    filename = 'Ecat' + cls.__name__ + 'Msg.msg'
+    """ This is to force initialization of empty annotations """
+    str(cls.__annotations__)
+    """ Message content """
+    msg = ''
+    for key in cls.__dict__.keys():
+        """ Reject dict keys with leading or trailing _ """
+        if '_' in [str(key)[0], str(key)[-1]]:
+            continue
+        """ Reject functions """
+        if cls.__dict__[key].__class__.__name__ == 'function':
+            continue
+        """ Load typing info if available """
+        if key in cls.__annotations__.keys():
+            type_args = typing.get_args(cls.__annotations__[key])
+        else:
+            type_args = ()
+        if msg != '':
+            msg += '\n'
+        if len(type_args):
+            if type_args[0] == str:
+                msg += 'string[] ' + str(key)
+            else:
+                msg += type_args[0].__name__ + '[] ' + str(key)
+        else:
+            """ Cannot use annotations info, has to be dict """
+            if cls.__dict__[key].__class__.__name__ == 'str':
+                msg += 'string ' + str(key)
+            else:
+                msg += cls.__dict__[key].__class__.__name__ + ' ' + str(key)
+    """ Fill store """
+    if filename not in store.keys() or store[filename] in ['']:
+        store[filename] = msg
+    """ Call on annotated members """
+    for key in cls.__annotations__.keys():
+        type_args = typing.get_args(cls.__annotations__[key])
+        if len(type_args):
+            if type_args[0] != str:
+                class_to_ros_msg_recursive(type_args[0], store)
+        else:
+            class_to_ros_msg_recursive(cls.__annotations__[key], store)
+
+
 def main():
-    dprint("Hello")
-    device_description = Description("../device-descriptions/elmo-ecat-desc-00010420.xml")
+    device_esi_dir = './device-descriptions/'
+    ros_msg_dir = './generated-ros/msg/'
+    device_description = Description(device_esi_dir + "elmo-ecat-desc-00010420.xml")
+
+    try:
+        if os.path.isdir(ros_msg_dir):
+            shutil.rmtree(ros_msg_dir)
+        os.makedirs(ros_msg_dir)
+
+        store = dict()
+        class_to_ros_msg_recursive(Description, store)
+
+        for key in store:
+            header = '-- ' + str(key) + ' --'
+            sep = ''.zfill(len(header)).replace('0', '-')
+            # print(sep + '\n' + header)
+            if str(store[key]) in ['', None]:
+                raise Exception('No contents ...')
+            else:
+                # print(str(store[key]))
+
+                with open(ros_msg_dir + str(key), 'w') as f:
+                    f.write(str(store[key]))
+
+            # print(sep)
+
+    except Exception as ex:
+        shutil.rmtree(ros_msg_dir)
+        raise ex
+
+    print('Done!')
 
 
 if __name__ == "__main__":

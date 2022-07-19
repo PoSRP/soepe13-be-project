@@ -20,7 +20,6 @@ from rqt_py_common.rqt_roscomm_util import RqtRoscommUtil
 from rqt_py_common.message_helpers import (get_action_text_from_class, get_message_text_from_class,
                                            get_service_text_from_class)
 
-from .ecat_esi_description import Description
 from .ecat_devices_widget import EcatDevicesWidget
 
 
@@ -62,19 +61,7 @@ class EcatDashboardWidget(QWidget):
         self._devices_popup.show()
 
     def _refresh_devices_clicked(self):
-        for esi_file in self._esi_files:
-            self._log_write('ESI File: ' + esi_file)
-
-            try:
-                device = Description(os.path.join(self._esi_file_dir, esi_file))
-                device_str = device.vendor.name + ' - ' + device.groups[0].type
-
-                item = QStandardItem(device_str)
-                model = self._device_list.model()
-                model.insertRow(0, [item])
-
-            except Exception as ex:
-                self._log_write('Caught an exception when reading ESI file: ' + str(ex))
+        self._log_write('Better make this huh ..')
 
     def cleanup_browsers_on_close(self):
         for browser in self._browsers:

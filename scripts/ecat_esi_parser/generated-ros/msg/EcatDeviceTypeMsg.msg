@@ -1,0 +1,3 @@
+string device_type
+string product_code
+string revision_no
