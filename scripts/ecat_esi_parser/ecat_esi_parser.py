@@ -250,10 +250,12 @@ def main():
 
             if 'msg' in args.generate[0]:
                 print('Generating ROS message files')
+                if not os.path.isdir(os.path.join(args.output_path, 'msg')):
+                    os.makedirs(os.path.join(args.output_path, 'msg'))
                 generate_ros_msgs(os.path.join(args.output_path, 'msg'))
                 msgs = os.listdir(os.path.join(args.output_path, 'msg'))
                 for msg in msgs:
-                    print('    ' + msg)
+                    print('  ' + msg)
 
             if 'description' in args.generate[0]:
                 print('Generating ROS device description files')

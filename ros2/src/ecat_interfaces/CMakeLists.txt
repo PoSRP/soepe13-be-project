@@ -27,6 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/EcatEEPROMMsg.msg"
   "msg/EcatFlagTypeMsg.msg"
   "msg/EcatGroupMsg.msg"
+  "msg/EcatGroupNameMsg.msg"
   "msg/EcatInfoEndItemMsg.msg"
   "msg/EcatInfoSubItemMsg.msg"
   "msg/EcatMailboxMsg.msg"
