@@ -1,6 +1,0 @@
-string name
-string desc
-string assign_activate
-string cycle_time_sync0
-string cycle_time_sync0_factor
-string shift_time_sync0
