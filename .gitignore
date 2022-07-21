@@ -1,3 +1,6 @@
+# Script build output
+scripts/ecat_esi_parser/generated-ros/
+
 # ROS2 log/install/build directory
 ros2/install/
 ros2/build/
