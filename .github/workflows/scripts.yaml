@@ -1,5 +1,9 @@
 name: Testing scripts
-on: [push]
+on:
+  push:
+    paths:
+      - scripts/**
+      - .github/workflows/scripts.yaml
 
 jobs:
   script-test:
