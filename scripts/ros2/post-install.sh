@@ -23,7 +23,7 @@ if [[ ! -f $RCFILE ]]; then
   exit 2
 fi
 
-rosdep init
+sudo rosdep init
 rosdep update
 
 printf "

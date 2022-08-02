@@ -1,5 +1,9 @@
 name: Compiling and testing ROS2
-on: [push]
+on:
+  push:
+    paths:
+      - 'ros2/**'
+      - 'libs/**'
 
 jobs:
   build-and-test:
