@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - latex/**
+      - .github/workflows/latex.yaml
 
 jobs:
   build-latex:

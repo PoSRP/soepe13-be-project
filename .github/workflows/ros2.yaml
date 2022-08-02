@@ -2,8 +2,9 @@ name: Compiling and testing ROS2
 on:
   push:
     paths:
-      - 'ros2/**'
-      - 'libs/**'
+      - ros2/**
+      - libs/**
+      - .github/workflows/ros2.yaml
 
 jobs:
   build-and-test:
