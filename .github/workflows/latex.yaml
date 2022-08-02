@@ -23,7 +23,7 @@ jobs:
             texlive-latex-extra texlive-latex-recommended
 
       - name: Run PDF LaTex
-        run: pdflatex ./latex/texfiles/main.tex
+        run: cd ./latex/texfiles && pdflatex ./latex/texfiles/main.tex
 
       - name: Check output
-        run: file -b ./latex/texfiles/main.pdf
+        run: file -b ./latex/texfiles/main.pdf | grep "PDF"
