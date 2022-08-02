@@ -1,0 +1,10 @@
+name: Testing scripts
+on: [push]
+
+jobs:
+  script-test:
+    name: Testing project scripts
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v3
