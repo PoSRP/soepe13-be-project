@@ -19,13 +19,15 @@ jobs:
 
       - name: Post install
         run: ./scripts/ros2/post-install.sh
+        shell: bash
 
-      - name: Build interfaces
-        run: |
-          source /home/$USER/.bashrc
-          source /opt/ros/humble/setup.bash
-          cd ./ros2
-          colcon build --packages-select ecat_interfaces --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
+      # - name: Build interfaces
+      #   run: |
+      #     source /home/$USER/.bashrc
+      #     source /opt/ros/humble/setup.bash
+      #     cd ./ros2
+      #     colcon build --packages-select ecat_interfaces --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
+      #   shell: bash
 
       - name: Build project
         run: |
@@ -33,9 +35,11 @@ jobs:
           source /opt/ros/humble/setup.bash
           cd ./ros2
           colcon build --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
+        shell: bash
 
       - name: Run test
         run: |
           source ./install/setup.bash
           cd ./ros2
           colcon test
+        shell: bash
