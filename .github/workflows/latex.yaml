@@ -15,6 +15,8 @@ jobs:
 
       - name: Install dependencies using apt
         run: |
+          sudo apt-get update
+          sudo apt-get upgrade -y
           sudo apt-get install -y \
             texstudio texlive-extra-utils \
             texlive-font-utils texlive-fonts-recommended \
