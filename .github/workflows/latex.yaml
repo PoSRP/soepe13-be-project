@@ -8,3 +8,16 @@ jobs:
     steps:
       - name: Check-out repository
         uses: actions/checkout@v3
+
+      - name: Install dependencies using apt
+        run: >
+          sudo apt-get install -y 
+            texstudio texlive-extra-utils 
+            texlive-font-utils texlive-fonts-recommended 
+            texlive-latex-extra texlive-latex-recommended
+
+      - name: Run PDF LaTex
+        run: pdflatex ./latex/texfiles/main.tex
+
+      - name: Check output
+        run: file -b ./latex/texfiles/main.pdf

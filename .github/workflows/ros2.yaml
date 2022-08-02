@@ -8,3 +8,22 @@ jobs:
     steps:
       - name: Check-out repository
         uses: actions/checkout@v3
+
+      - name: Install
+        run: sudo ./scripts/ros2/install.sh
+
+      - name: Post install
+        run: ./scripts/ros2/post-install.sh
+
+      - name: Build
+        run: |
+          source /home/$USER/.bashrc
+          source /opt/ros/humble/setup.bash
+          cd ./ros2
+          colcon build --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
+
+      - name: Run test
+        run: |
+          source ./install/setup.bash
+          cd ./ros2
+          colcon test
