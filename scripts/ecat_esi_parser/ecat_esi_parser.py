@@ -77,7 +77,7 @@ def class_to_ros_msg_recursive(cls, store: dict) -> dict:
         raise Exception("Don't give me this kind of class: [str, list, dict, Xet.Element]. You gave: " +
                         str(cls.__name__))
     """ Filename """
-    filename = 'Ecat' + cls.__name__ + 'Msg.msg'
+    filename = 'Ecat' + cls.__name__ + '.msg'
     """ This is to force initialization of empty annotations """
     str(cls.__annotations__)
     """ Message content """
@@ -100,13 +100,13 @@ def class_to_ros_msg_recursive(cls, store: dict) -> dict:
             if type_args[0] == str:
                 msg += 'string[] ' + str(key)
             else:
-                msg += type_args[0].__name__ + '[] ' + str(key)
+                msg += 'Ecat' + type_args[0].__name__ + '[] ' + str(key)
         else:
             """ Cannot use annotations info, has to be dict """
             if cls.__dict__[key].__class__.__name__ == 'str':
                 msg += 'string ' + str(key)
             else:
-                msg += cls.__dict__[key].__class__.__name__ + ' ' + str(key)
+                msg += 'Ecat' + cls.__dict__[key].__class__.__name__ + ' ' + str(key)
     """ Fill store """
     if filename not in store.keys() or store[filename] in ['']:
         store[filename] = msg
@@ -152,12 +152,12 @@ def generate_ros_device_description(device_description: Description) -> None:
     raise Exception('Unsupported feature: Generating output from device descriptions is not supported yet')
 
 
-def get_files_in_path(esi_path: str, recurse=True) -> list:
-    if not os.path.isdir(esi_path):
-        raise Exception('Path provided is not a directory: ' + esi_path)
+def get_files_in_path(path: str, recurse=True) -> list:
+    if not os.path.isdir(path):
+        return []
     files = []
-    for f in os.listdir(esi_path):
-        af = os.path.join(esi_path, f)
+    for f in os.listdir(path):
+        af = os.path.join(path, f)
         if recurse and os.path.isdir(af):
             [files.append(r) for r in get_files_in_path(af)]
         elif not os.path.isdir(af):
@@ -166,41 +166,39 @@ def get_files_in_path(esi_path: str, recurse=True) -> list:
 
 
 def install(src_dir: str) -> None:
-    ecat_interfaces_path = os.path.join(os.getcwd(), '..', '..', 'ros2', 'src', 'ecat_interfaces')
-    """ Read msg and srv files in output directory """
-    new_msgs = []
-    new_srvs = []
-    if os.path.isdir(os.path.join(src_dir, 'msg')) and len(os.listdir(os.path.join(src_dir, 'msg'))):
-        new_msgs = [os.path.basename(msg).split('.') for msg in get_files_in_path(os.path.join(src_dir, 'msg'))]
-    if os.path.isdir(os.path.join(src_dir, 'srv')) and len(os.listdir(os.path.join(src_dir, 'srv'))):
-        new_srvs = [os.path.basename(srv).split('.') for srv in get_files_in_path(os.path.join(src_dir, 'srv'))]
+    """ Read msg and srv files in source directory """
+    new_msgs = [os.path.basename(msg).split('.') for msg in get_files_in_path(os.path.join(src_dir, 'msg'))]
+    new_srvs = [os.path.basename(srv).split('.') for srv in get_files_in_path(os.path.join(src_dir, 'srv'))]
     """ Copy files """
     files = new_msgs + new_srvs
+    ecat_interfaces_path = os.path.join(os.getcwd(), '..', '..', 'ros2', 'src', 'ecat_interfaces')
     for new_file in files:
         source = os.path.join(src_dir, new_file[1], new_file[0] + '.' + new_file[1])
-        destination = os.path.join(ecat_interfaces_path, new_file[1], new_file[0] + '.' + new_file[1])
+        destination = os.path.join(ecat_interfaces_path, new_file[1], 'gen', new_file[0] + '.' + new_file[1])
         if os.path.exists(destination):
             printer('  overwriting ' + new_file[0] + '.' + new_file[1])
         else:
             printer('  creating ' + new_file[0] + '.' + new_file[1])
         shutil.copy(source, destination)
     """ Read and sort through contents of ecat_interfaces cmake """
-    msg_dir = os.path.join(ecat_interfaces_path, 'msg')
-    srv_dir = os.path.join(ecat_interfaces_path, 'srv')
+    msg_dir = os.path.join(ecat_interfaces_path, 'msg', 'gen')
+    srv_dir = os.path.join(ecat_interfaces_path, 'srv', 'gen')
     cmake_txt = os.path.join(ecat_interfaces_path, 'CMakeLists.txt')
     with open(cmake_txt) as f:
         cmake_content = f.read().splitlines()
     idx_start = [cmake_content.index(line) for line in cmake_content
-                 if line == 'rosidl_generate_interfaces(${PROJECT_NAME}'][0] + 1
+                 if 'rosidl_generate_interfaces(${PROJECT_NAME}' in line][0] + 1
     idx_end = [cmake_content[idx_start:].index(line) + idx_start for line in cmake_content[idx_start:]
                if line == ')'][0]
+
     lines = [(line.split('/')[0],
-              line.split('/')[1].split('.')[0],
-              line.split('/')[1].split('.')[1]) for line in cmake_content[idx_start:idx_end]
-             if ('msg/' in line and '.msg' in line) or ('srv/' in line and '.srv' in line)]
+              line.split('/')[1],
+              line.split('/')[2].split('.')[0],
+              line.split('/')[2].split('.')[1]) for line in cmake_content[idx_start:idx_end]
+             if ('msg/gen/' in line and '.msg' in line) or ('srv/gen/' in line and '.srv' in line)]
     """ Remove current entries in cmake content """
     for line in lines:
-        li = line[0] + '/' + line[1] + '.' + line[2]
+        li = line[0] + '/' + line[1] + '/' + line[2] + '.' + line[2]
         if cmake_content.count(li):
             cmake_content.remove(li)
     """ Printing and adding new content """
@@ -213,9 +211,12 @@ def install(src_dir: str) -> None:
     for file in files:
         if file[0] not in [line[1] for line in lines]:
             printer('  New cmake entry: ' + file[0] + '.' + file[1])
-        str_line = ''.zfill(len(lines[0][0]) - len(lines[0][0].lstrip(' '))).replace('0', ' ') + \
-                   '"' + file[1] + '/' + file[0] + '.' + file[1] + '"'
-        cmake_content.insert(idx_start, str_line)
+            indent = len(cmake_content[idx_start+1]) - len(cmake_content[idx_start+1])
+            if indent < 2:
+                indent = 2
+            str_line = ''.zfill(indent).replace('0', ' ') + \
+                       file[1] + '/gen/' + file[0] + '.' + file[1]
+            cmake_content.insert(idx_start, str_line)
     """ Sorting new content """
     idx_end = [cmake_content[idx_start:].index(line)+idx_start for line in cmake_content[idx_start:] if line == ')'][0]
     new_content = [line for line in cmake_content[idx_start:idx_end] if line.strip(' ') != '']
@@ -333,10 +334,10 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
+    main()
 
-    default_esi_file = os.path.join(os.getcwd(), 'device-descriptions', 'elmo', 'elmo-ecat-desc-00010420.xml')
-    device = Description(default_esi_file)
-    device_yaml = object_to_yaml_recursive(device)
-    for yline in device_yaml:
-        print(yline)
+    # default_esi_file = os.path.join(os.getcwd(), 'device-descriptions', 'elmo', 'elmo-ecat-desc-00010420.xml')
+    # device = Description(default_esi_file)
+    # device_yaml = object_to_yaml_recursive(device)
+    # for yline in device_yaml:
+        # print(yline)
