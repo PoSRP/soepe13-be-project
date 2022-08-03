@@ -1,4 +1,7 @@
 on:
+  merge:
+    paths:
+      - *
   push:
     paths:
       - latex/**
