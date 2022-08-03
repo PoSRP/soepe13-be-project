@@ -28,4 +28,4 @@ jobs:
 
       - name: Check output exists
         shell: bash
-        run: file -b ./latex/texfiles/main.pdf | grep "PDF"
+        run: file -b ./latex/texfiles/main.pdf
