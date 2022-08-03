@@ -15,62 +15,33 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/SlaveConfiguration.msg
   msg/SlaveStatus.msg
   msg/gen/EcatCoEInitCmd.msg
-  msg/gen/EcatCoEInitCmd.msg
-  msg/gen/EcatCoeMailbox.msg
   msg/gen/EcatCoeMailbox.msg
   msg/gen/EcatDC.msg
-  msg/gen/EcatDC.msg
-  msg/gen/EcatDataType.msg
   msg/gen/EcatDataType.msg
   msg/gen/EcatDescription.msg
-  msg/gen/EcatDescription.msg
-  msg/gen/EcatDevice.msg
   msg/gen/EcatDevice.msg
   msg/gen/EcatDeviceEsc.msg
-  msg/gen/EcatDeviceEsc.msg
-  msg/gen/EcatDeviceInfo.msg
   msg/gen/EcatDeviceInfo.msg
   msg/gen/EcatDeviceName.msg
-  msg/gen/EcatDeviceName.msg
-  msg/gen/EcatDeviceRegister.msg
   msg/gen/EcatDeviceRegister.msg
   msg/gen/EcatDeviceSM.msg
-  msg/gen/EcatDeviceSM.msg
-  msg/gen/EcatDeviceType.msg
   msg/gen/EcatDeviceType.msg
   msg/gen/EcatDictionary.msg
-  msg/gen/EcatDictionary.msg
-  msg/gen/EcatDictionaryObject.msg
   msg/gen/EcatDictionaryObject.msg
   msg/gen/EcatEEPROM.msg
-  msg/gen/EcatEEPROM.msg
-  msg/gen/EcatEEPROMCategory.msg
   msg/gen/EcatEEPROMCategory.msg
   msg/gen/EcatFlagType.msg
-  msg/gen/EcatFlagType.msg
-  msg/gen/EcatGroup.msg
   msg/gen/EcatGroup.msg
   msg/gen/EcatGroupName.msg
-  msg/gen/EcatGroupName.msg
-  msg/gen/EcatInfoEndItem.msg
   msg/gen/EcatInfoEndItem.msg
   msg/gen/EcatInfoSubItem.msg
-  msg/gen/EcatInfoSubItem.msg
-  msg/gen/EcatMailbox.msg
   msg/gen/EcatMailbox.msg
   msg/gen/EcatOpMode.msg
-  msg/gen/EcatOpMode.msg
-  msg/gen/EcatPDO.msg
   msg/gen/EcatPDO.msg
   msg/gen/EcatPdoEntry.msg
-  msg/gen/EcatPdoEntry.msg
-  msg/gen/EcatPdoExclude.msg
   msg/gen/EcatPdoExclude.msg
   msg/gen/EcatProfile.msg
-  msg/gen/EcatProfile.msg
   msg/gen/EcatSubDataType.msg
-  msg/gen/EcatSubDataType.msg
-  msg/gen/EcatVendor.msg
   msg/gen/EcatVendor.msg
   srv/GetConnectedSlaves.srv
   srv/GetMasterConfiguration.srv
