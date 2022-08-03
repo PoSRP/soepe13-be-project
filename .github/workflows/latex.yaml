@@ -1,4 +1,3 @@
-name: Compiling LaTeX
 on:
   push:
     paths:
@@ -7,13 +6,14 @@ on:
 
 jobs:
   build-latex:
-    name: Building LaTeX document
+    name: Building LaTeX project
     runs-on: ubuntu-22.04
     steps:
       - name: Check-out repository
         uses: actions/checkout@v3
 
       - name: Install dependencies using apt
+        shell: bash
         run: |
           sudo apt-get update
           sudo apt-get upgrade -y
@@ -22,8 +22,10 @@ jobs:
             texlive-font-utils texlive-fonts-recommended \
             texlive-latex-extra texlive-latex-recommended
 
-      - name: Run PDF LaTex
+      - name: Compile texfiles using pdflatex
+        shell: bash
         run: cd ./latex/texfiles && pdflatex main.tex
 
-      - name: Check output
+      - name: Check output exists
+        shell: bash
         run: file -b ./latex/texfiles/main.pdf | grep "PDF"
