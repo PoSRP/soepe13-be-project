@@ -1,7 +1,7 @@
-on:
-  merge:
-    paths:
-      - ./**
+on:  
+  pull_request:
+    branches:
+      - master
   push:
     paths:
       - ./latex/**

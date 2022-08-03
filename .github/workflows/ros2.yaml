@@ -1,7 +1,7 @@
 on:
-  merge:
-    paths:
-      - ./**
+  pull_request:
+    branches:
+      - master
   push:
     paths:
       - ./ros2/**
