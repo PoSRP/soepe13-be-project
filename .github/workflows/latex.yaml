@@ -1,0 +1,34 @@
+on:  
+  pull_request:
+    branches:
+      - master
+  push:
+    paths:
+      - ./latex/**
+      - ./.github/workflows/latex.yaml
+
+jobs:
+  build-latex:
+    name: Building LaTeX project
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies using apt
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get upgrade -y
+          sudo apt-get install -y \
+            texstudio texlive-extra-utils \
+            texlive-font-utils texlive-fonts-recommended \
+            texlive-latex-extra texlive-latex-recommended
+
+      - name: Compile texfiles using pdflatex
+        shell: bash
+        run: cd ./latex/texfiles && pdflatex main.tex
+
+      - name: Check output exists
+        shell: bash
+        run: file -b ./latex/texfiles/main.pdf

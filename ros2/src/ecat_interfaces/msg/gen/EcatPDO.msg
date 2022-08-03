@@ -3,5 +3,5 @@ string fixed
 string sm
 string index
 string name
-PdoEntry[] entries
-PdoExclude[] excludes
+EcatPdoEntry[] entries
+EcatPdoExclude[] excludes

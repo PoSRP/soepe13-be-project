@@ -1,3 +1,3 @@
 string name
 string value
-InfoEndItem[] info
+EcatInfoEndItem[] info

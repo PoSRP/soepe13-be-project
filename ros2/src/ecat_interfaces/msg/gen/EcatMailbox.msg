@@ -1,3 +1,3 @@
 string eoe
 string foe
-CoeMailbox coe
+EcatCoeMailbox coe
