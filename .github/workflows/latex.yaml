@@ -1,11 +1,11 @@
 on:
   merge:
     paths:
-      - *
+      - ./**
   push:
     paths:
-      - latex/**
-      - .github/workflows/latex.yaml
+      - ./latex/**
+      - ./.github/workflows/latex.yaml
 
 jobs:
   build-latex:

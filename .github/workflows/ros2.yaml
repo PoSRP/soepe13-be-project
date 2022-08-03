@@ -1,12 +1,12 @@
 on:
   merge:
     paths:
-      - *
+      - ./**
   push:
     paths:
-      - ros2/**
-      - libs/**
-      - .github/workflows/ros2.yaml
+      - ./ros2/**
+      - ./libs/**
+      - ./.github/workflows/ros2.yaml
 
 jobs:
   build-and-test:
