@@ -39,7 +39,8 @@ jobs:
 
       - name: Run test
         run: |
-          source ./install/setup.bash
           cd ./ros2
+          source ./install/setup.bash
           colcon test
+          colcon test-result --all --verbose
         shell: bash
