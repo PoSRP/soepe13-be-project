@@ -41,3 +41,7 @@ jobs:
           source ./install/setup.bash
           colcon test
           colcon test-result --all --verbose
+
+      - name: Build using script
+        shell: bash
+        run: ./scripts/build-ros.sh

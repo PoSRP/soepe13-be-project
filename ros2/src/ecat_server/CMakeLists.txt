@@ -13,8 +13,8 @@ find_package(std_msgs REQUIRED)
 find_package(ecat_interfaces REQUIRED)
 
 set(SRC_FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/src/ecat_server.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/ecat_server.cpp
 )
 
 add_executable(ecat_server ${SRC_FILES})
@@ -23,10 +23,10 @@ target_include_directories(ecat_server PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(ecat_server PUBLIC c_std_99 cxx_std_17)
 
-ament_target_dependencies(${PROJECT_NAME} 
-	rclcpp 
-	std_msgs
-	ecat_interfaces
+ament_target_dependencies(${PROJECT_NAME}
+  rclcpp
+  std_msgs
+  ecat_interfaces
 )
 
 install(TARGETS ecat_server
