@@ -1,4 +1,7 @@
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
@@ -6,6 +9,7 @@ on:
     paths:
       - ./ros2/**
       - ./libs/**
+      - ./scripts/**ros*
       - ./.github/workflows/ros2.yaml
 
 jobs:

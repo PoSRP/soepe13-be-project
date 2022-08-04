@@ -1,10 +1,14 @@
-on:  
+on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
   push:
     paths:
       - ./latex/**
+      - ./scripts/**latex*
       - ./.github/workflows/latex.yaml
 
 jobs:
