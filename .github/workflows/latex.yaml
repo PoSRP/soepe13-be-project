@@ -1,12 +1,5 @@
 name: LaTeX
 on: [push, pull_request] 
-  # pull_request:
-  #   branches:
-  #     - master
-  # push:
-  #   paths:
-  #     - ./latex/**
-  #     - ./.github/workflows/latex.yaml
 
 jobs:
   build-latex:

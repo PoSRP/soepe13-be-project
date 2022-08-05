@@ -23,7 +23,7 @@ It will consist of two phases:
 
 The first phase of the project will be applicable to all EtherCAT devices while the seconds phase 
 requires the connected device to have a feedback mechanism in the manufacturer specific part of 
-the device protocol. Due to economic and time constraints the project will be developed using a 
+the device protocol. Due to economic and timely constraints the project will be developed using a 
 single EtherCAT device ([AMC FM060-5-EM](https://www.a-m-c.com/product/fm060-5-em/)).
 
 A good integration should support the following:
@@ -54,3 +54,8 @@ during both phases.
   - Comparing estimated values to "classical approaches"
   - Developing an automatic calibration algorithm 
   - Testing the developed calibration algorithm 
+
+## Special thanks to
+
+- SDU Supervisor: [Aljaz Kramberger](https://portal.findresearcher.sdu.dk/en/persons/alja%C5%BE-kramberger/)
+- Kobots Supervisor: [Nikki Lemann](https://dk.linkedin.com/in/nikkilemann)

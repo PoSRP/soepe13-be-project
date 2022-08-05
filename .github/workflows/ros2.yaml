@@ -1,13 +1,5 @@
 name: ROS2
 on: [push, pull_request]
-  # pull_request:
-  #   branches:
-  #     - master
-  # push:
-  #   paths:
-  #     - ./ros2/**
-  #     - ./libs/**
-  #     - ./.github/workflows/ros2.yaml
 
 jobs:
   build-and-test:
