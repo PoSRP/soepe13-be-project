@@ -1,6 +1,6 @@
 
-[![LaTeX Build Status](https://github.com/PoSRP/soepe13-be-project/actions/workflows/latex.yaml/badge.svg?branch=master)](https://github.com/PoSRP/soepe13-be-project/actions)  
-[![ROS2 Build Status](https://github.com/PoSRP/soepe13-be-project/actions/workflows/ros2.yaml/badge.svg?branch=master)](https://github.com/PoSRP/soepe13-be-project/actions)  
+[![Build Status](https://github.com/PoSRP/soepe13-be-project/actions/workflows/latex.yaml/badge.svg?branch=master)](https://github.com/PoSRP/soepe13-be-project/actions)  
+[![Build Status](https://github.com/PoSRP/soepe13-be-project/actions/workflows/ros2.yaml/badge.svg?branch=master)](https://github.com/PoSRP/soepe13-be-project/actions)  
 
 # BE Project
 

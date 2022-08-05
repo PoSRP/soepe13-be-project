@@ -1,3 +1,4 @@
+name: LaTeX
 on: [push, pull_request] 
   # pull_request:
   #   branches:
