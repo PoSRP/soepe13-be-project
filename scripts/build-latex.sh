@@ -30,6 +30,7 @@ done
 
 if [[ $counter -eq $REBUILD_LIMIT ]]; then
   printf "Limited rebuilds to %d, PDF probably has errors.\n" $counter
+  exit 1
 else
   printf "It took %d runs to complete the PDF.\n" $counter
 fi
