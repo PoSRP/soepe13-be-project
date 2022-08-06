@@ -25,6 +25,8 @@ latex/**/*.out
 latex/**/*.pdf
 latex/**/*.synctex.gz
 latex/**/*.toc
+# TexStudio session
+**/.txss2
 
 # HTML version of README
 README.html
