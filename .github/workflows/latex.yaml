@@ -21,7 +21,7 @@ jobs:
 
       - name: Compile texfiles using pdflatex
         shell: bash
-        run: cd ./latex/texfiles && pdflatex main.tex
+        run: ./scripts/build-latex.sh
 
       - name: Check output exists
         shell: bash
