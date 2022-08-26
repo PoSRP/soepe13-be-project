@@ -5,7 +5,7 @@ import shutil
 import typing
 import xml.etree.ElementTree as Xet
 
-from esi_classes import Description
+from .esi_classes import Description
 
 
 class Printer:

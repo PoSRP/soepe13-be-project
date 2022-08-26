@@ -10,7 +10,11 @@ if [ -z $MY_PATH ] ; then
 fi
 
 cd $MY_PATH/../ros2
-source $PWD/install/setup.bash
+if [[ -f $PWD/install/setup.bash ]]; then
+  source $PWD/install/setup.bash
+else
+  source /opt/ros/humble/setup.bash
+fi
 
 colcon build --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
 colcon test

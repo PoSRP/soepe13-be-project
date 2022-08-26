@@ -14,6 +14,8 @@ setup(
             ['resource/ecat_dashboard.ui']),
         ('share/' + package_name + '/resource',
             ['resource/ecat_devices.ui']),
+        ('share/' + package_name + '/resource',
+            ['resource/device-descriptions/elmo-ecat-desc-00010420.xml']),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name, ['plugin.xml']),
     ],

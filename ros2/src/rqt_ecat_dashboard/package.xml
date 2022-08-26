@@ -11,6 +11,8 @@
   
   <maintainer email="soepe13@student.sdu.dk">Søren Riisom Pedersen</maintainer>
 
+  <depend>ecat_interfaces</depend>
+
   <exec_depend>python3-catkin-pkg-modules</exec_depend>
   <exec_depend version_gte="0.2.19">python_qt_binding</exec_depend>
   <exec_depend>rclpy</exec_depend>
