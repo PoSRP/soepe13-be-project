@@ -1,1 +1,0 @@
-EcatDeviceRegister[] registers

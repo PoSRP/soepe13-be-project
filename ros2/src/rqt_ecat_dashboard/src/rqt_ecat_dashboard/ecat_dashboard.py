@@ -6,7 +6,9 @@ class EcatDashboard(Plugin):
     def __init__(self, context):
         super(EcatDashboard, self).__init__(context)
         self.setObjectName('EcatDashboard')
-        self._widget = EcatDashboardWidget()
+
+        assert hasattr(context, 'node'), 'Context does not have a node.'
+        self._widget = EcatDashboardWidget(context.node)
         if context.serial_number() > 1:
             self._widget.setWindowTitle(
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))

@@ -1,2 +1,0 @@
-string profile_no
-EcatDictionary dictionary
