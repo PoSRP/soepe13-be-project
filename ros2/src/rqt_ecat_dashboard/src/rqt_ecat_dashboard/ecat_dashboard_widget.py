@@ -511,19 +511,6 @@ class Icons:
                                            Qt.FastTransformation)
 
 
-class RosCallFuture:
-    def __init__(self, client, future):
-        self.client = client
-        self.future = future
-
-    def done(self):
-        if self.future.done():
-            self.client.destroy()
-            return True
-        else:
-            return False
-
-
 class ExecuteMoveActionClient:
     # TODO: Create and import the execute move action type
     def __init__(self, node):
