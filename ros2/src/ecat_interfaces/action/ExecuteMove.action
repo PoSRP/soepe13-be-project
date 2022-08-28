@@ -1,0 +1,8 @@
+float32[] time_data
+float32[] value_data
+---
+bool good
+string msg
+---
+float32[] time_data
+float32[] value_data

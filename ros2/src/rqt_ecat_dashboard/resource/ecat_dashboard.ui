@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>630</width>
-    <height>295</height>
+    <width>784</width>
+    <height>391</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -68,7 +68,7 @@
                     <widget class="QComboBox" name="_cb_slaves"/>
                    </item>
                    <item>
-                    <widget class="QComboBox" name="_cb_slaves_2"/>
+                    <widget class="QComboBox" name="_cb_slave_mode"/>
                    </item>
                    <item>
                     <spacer name="verticalSpacer_2">
@@ -135,7 +135,7 @@
                       </widget>
                      </item>
                      <item row="0" column="1">
-                      <widget class="QLineEdit" name="_lbl_parameter_current_value">
+                      <widget class="QLineEdit" name="_le_parameter_current_value">
                        <property name="readOnly">
                         <bool>true</bool>
                        </property>
@@ -149,7 +149,7 @@
                       </widget>
                      </item>
                      <item row="1" column="1">
-                      <widget class="QLineEdit" name="_lbl_parameter_new_value"/>
+                      <widget class="QLineEdit" name="_le_parameter_new_value"/>
                      </item>
                     </layout>
                    </item>
@@ -182,16 +182,152 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_12">
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_10">
+            <layout class="QVBoxLayout" name="_graph_top_layout">
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_5"/>
-             </item>
-             <item>
-              <widget class="QWidget" name="_graph_widget" native="true">
-               <property name="autoFillBackground">
-                <bool>true</bool>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <item>
+                  <widget class="QTableView" name="_tv_points">
+                   <property name="selectionMode">
+                    <enum>QAbstractItemView::SingleSelection</enum>
+                   </property>
+                   <property name="selectionBehavior">
+                    <enum>QAbstractItemView::SelectRows</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QFormLayout" name="formLayout_3">
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="_lbl_point_mode">
+                     <property name="text">
+                      <string>Position [mm]:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QLineEdit" name="_le_point_mode_value">
+                     <property name="placeholderText">
+                      <string>0.00</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="_lbl_point_time">
+                     <property name="text">
+                      <string>Time [s]:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QLineEdit" name="_le_point_time_value">
+                     <property name="placeholderText">
+                      <string>0.00</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_7">
+                   <item>
+                    <widget class="QPushButton" name="_btn_point_add">
+                     <property name="text">
+                      <string>Add</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="_btn_point_remove">
+                     <property name="text">
+                      <string>Remove</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="_btn_point_clear_all">
+                     <property name="text">
+                      <string>Clear all</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_10">
+                 <item>
+                  <widget class="QComboBox" name="_cb_move_mode"/>
+                 </item>
+                 <item>
+                  <widget class="QListView" name="_lv_point_profiles">
+                   <property name="editTriggers">
+                    <set>QAbstractItemView::NoEditTriggers</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QFormLayout" name="formLayout_2">
+                   <item row="1" column="0" colspan="2">
+                    <widget class="QPushButton" name="_btn_point_profile_save">
+                     <property name="text">
+                      <string>Save profile</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0" colspan="2">
+                    <widget class="QLineEdit" name="_le_point_profile_save_name"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_8">
+                   <item>
+                    <widget class="QPushButton" name="_btn_point_profile_load">
+                     <property name="text">
+                      <string>Load profile</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="_btn_point_profile_delete">
+                     <property name="text">
+                      <string>Delete profile</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_14">
+                 <item>
+                  <widget class="QTableView" name="_tv_action_feedback"/>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_9">
+                   <item>
+                    <widget class="QPushButton" name="_btn_move_execute">
+                     <property name="text">
+                      <string>Execute move</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="_btn_move_stop">
+                     <property name="text">
+                      <string>Stop move</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
@@ -206,6 +342,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_3">
              <item>
               <widget class="QTextEdit" name="_te_log">
+               <property name="lineWrapMode">
+                <enum>QTextEdit::NoWrap</enum>
+               </property>
                <property name="readOnly">
                 <bool>true</bool>
                </property>
@@ -333,6 +472,21 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>_tab_widget</tabstop>
+  <tabstop>_btn_network_services_refresh</tabstop>
+  <tabstop>_cb_masters</tabstop>
+  <tabstop>_btn_network_start</tabstop>
+  <tabstop>_btn_network_stop</tabstop>
+  <tabstop>_cb_slaves</tabstop>
+  <tabstop>_cb_slave_mode</tabstop>
+  <tabstop>_lv_parameters</tabstop>
+  <tabstop>_btn_parameter_load</tabstop>
+  <tabstop>_btn_parameter_set</tabstop>
+  <tabstop>_le_parameter_current_value</tabstop>
+  <tabstop>_le_parameter_new_value</tabstop>
+  <tabstop>_te_log</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
