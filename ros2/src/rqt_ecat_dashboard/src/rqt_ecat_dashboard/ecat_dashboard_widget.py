@@ -13,6 +13,7 @@ import rclpy
 from rclpy.action import ActionClient
 from ament_index_python.resources import (get_resource, get_resources)
 from rqt_py_common.message_helpers import (get_service_class, SRV_MODE)
+from action_msgs.msg import GoalStatus
 
 from ecat_interfaces.action import ExecuteMove
 
@@ -104,6 +105,7 @@ class EcatDashboardWidget(QWidget):
 
         self._action_client = None
         self._action_future = None
+        self._action_goal = None
         self._action_feedback_model = QStandardItemModel()
         self._action_feedback_model.setColumnCount(2)
         self._action_feedback_model.setHorizontalHeaderLabels(['Time [s]', 'Position [mm]'])
@@ -134,46 +136,111 @@ class EcatDashboardWidget(QWidget):
         self.log('Network stop result: ' + str(result))
 
     def handle_action_feedback_execute_move(self, feedback_msg):
-        time_data = feedback_msg.time_data
-        value_data = feedback_msg.value_data
+        time_data = feedback_msg.feedback.fb_time_data
+        value_data = feedback_msg.feedback.fb_value_data
         for index in range(len(time_data)):
-            self._action_feedback_model.appendRow([FloatStandardItem(time_data[index]),
-                                                   FloatStandardItem(value_data[index])])
+            self._action_feedback_model.appendRow([FloatStandardItem(str(time_data[index] /
+                                                                         1000000)),
+                                                   FloatStandardItem(str(value_data[index]))])
             self.log(f'Received feedback: ({time_data[index]}, {value_data[index]})')
 
     def handle_action_result_execute_move(self, future):
-        result = future.result()
-        if result.good:
-            self.log('Executed move completed: ' + str(result.msg))
+        result = future.result().result
+        status = future.result().status
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.log('Move succeeded! Result: {0}'.format(result.msg))
         else:
-            self.log('Execute move completed with errors: ' + str(result.msg))
+            self.log('Move failed with status: {0}'.format(status))
         self._action_future = None
         self._action_client = None
+        self._action_goal = None
+
+    def handle_action_goal_response_execute_move(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.log('Move rejected')
+            self._action_future = None
+            self._action_client = None
+            self._action_goal = None
+            return
+        self._action_goal = goal_handle
+        self.log('Move accepted')
+        self._action_future = goal_handle.get_result_async()
+        self._action_future.add_done_callback(self.handle_action_result_execute_move)
+
+    @staticmethod
+    def convert_profile_to_point_list(times, values, interval_us=1000, frequency=1000):
+        if frequency != 1000:
+            interval_us = int(1000000 / frequency)
+        time_idx = 0
+        loop_idx = 0
+        final_time = times[-1] * 1000000
+
+        input_idx = 2
+        t0, v0 = times[input_idx - 2], values[input_idx - 2]
+        t1, v1 = times[input_idx - 1], values[input_idx - 1]
+
+        result_times = []
+        result_values = []
+        while time_idx < final_time:
+            result_times.append(time_idx)
+            while time_idx > t1 and input_idx < len(times):
+                t0, v0 = t1, v1
+                t1, v1 = times[input_idx], values[input_idx]
+                input_idx += 1
+
+            dv = v1 - v0
+            dt = t1 - t0
+            t = time_idx - t0 * 1000000
+            res = (dv / dt) * t + v0
+            result_values.append(res)
+
+            loop_idx += 1
+            time_idx += interval_us
+        return result_times, result_values
 
     def btn_move_execute_clicked(self):
         if self._action_client is not None:
             self.log('The action client is already active')
             return
-        if self._cb_slave_mode.currentText() != self._cb_move_mode.currentText():
-            self.log('Current move mode does not match with slave mode')
-            return
+        # if self._cb_slave_mode.currentText() != self._cb_move_mode.currentText():
+        #     self.log('Current move mode does not match with slave mode')
+        #     return
+
+        point_times = []
+        point_values = []
+        for index in range(self._points_model.rowCount()):
+            row = [self._points_model.item(index, 0),
+                   self._points_model.item(index, 1)]
+            point_times.append(float(row[0].text()))
+            point_values.append(float(row[1].text()))
+
+        time_data, value_data = self.convert_profile_to_point_list(point_times, point_values,
+                                                                   interval_us=10000)
         self._action_client = ActionClient(self._node, ExecuteMove, 'execute_move')
         goal_msg = ExecuteMove.Goal()
-        goal_msg.time_data = []
-        goal_msg.value_data = []
-
-        self._action_feedback_model.clear()
-        self._action_feedback_model.setColumnCount(2)
-        self._action_feedback_model.setHorizontalHeaderLabels(['Time [s]', 'Position [mm]'])
+        goal_msg.time_data = [float(i) for i in time_data]
+        goal_msg.value_data = [float(i) for i in value_data]
 
         self._action_client.wait_for_server()
         self._action_future = self._action_client.send_goal_async(
             goal_msg,
             feedback_callback=self.handle_action_feedback_execute_move)
-        self._action_future.add_done_callback(self.handle_action_result_execute_move)
+        self._action_future.add_done_callback(self.handle_action_goal_response_execute_move)
+        self.cb_move_mode_index_changed()
+
+    def move_cancel_done(self, future):
+        cancel_response = future.result()
+        if len(cancel_response.goals_canceling) > 0:
+            self.log('Move successfully canceled')
+        else:
+            self.log('Move failed to cancel')
 
     def btn_move_stop_clicked(self):
-        pass
+        if self._action_future is None:
+            self.log('No active action to stop')
+        future = self._action_goal.cancel_goal_async()
+        future.add_done_callback(self.move_cancel_done)
 
     def lv_point_profiles_item_selected(self):
         # Selections are constrained to a single row
@@ -418,14 +485,13 @@ class EcatDashboardWidget(QWidget):
         for service_name, service_types in service_names_and_types:
             if 'ecat_server' not in service_name:
                 continue
-            else:
-                node_name = str(service_name).split('/')[1]
-                self._masters[node_name] = ''
             if len(service_types) > 1:
                 continue
             service_name_tokens = service_types[0].split('/')
             if len(service_name_tokens) == 3 and service_name_tokens[1] != SRV_MODE:
                 continue
+            node_name = str(service_name).split('/')[1]
+            self._masters[node_name] = ''
             service_class = get_service_class(service_types[0])
             if service_class is not None:
                 self._services[service_name] = service_types[0]
@@ -446,12 +512,15 @@ class EcatDashboardWidget(QWidget):
         self._call_master_node_service(srv)
 
     def _call_master_node_service(self, service_name):
+        self.log('Not implemented')
+        return
+
         _service_info = {}
         _service_info['service_name'] = service_name
         try:
             _service_info['service_class_name'] = self._services[service_name]
         except:
-            self.log('Network starting service is missing, try refreshing the server list')
+            self.log(f'Service {service_name} is missing')
             return
         service_class = get_service_class(self._service_info['service_class_name'])
         assert service_class, 'Could not find class {} for service: {}'.format(
@@ -470,6 +539,9 @@ class EcatDashboardWidget(QWidget):
         cli = self._node.create_client(
             self._service_info['service_class'], self._service_info['service_name'])
         future = cli.call_async(request)
+
+        # TODO: Add callback to future and destroy cli there
+
         self._active_service_futures[service_name] = RosCallFuture(cli, future)
         while rclpy.ok() and not future.done():
             pass
@@ -509,19 +581,6 @@ class Icons:
                                                  Qt.FastTransformation)
         self.dot_red = self.dot_red.scaled(self.width, self.height, Qt.KeepAspectRatio,
                                            Qt.FastTransformation)
-
-
-class RosCallFuture:
-    def __init__(self, client, future):
-        self.client = client
-        self.future = future
-
-    def done(self):
-        if self.future.done():
-            self.client.destroy()
-            return True
-        else:
-            return False
 
 
 class ExecuteMoveActionClient:

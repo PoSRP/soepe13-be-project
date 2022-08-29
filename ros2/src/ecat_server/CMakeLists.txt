@@ -1,36 +1,39 @@
 cmake_minimum_required(VERSION 3.8)
 project(ecat_server)
 
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(ecat_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(rosidl_runtime_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
 
-find_package(ecat_interfaces REQUIRED)
+add_executable(ecat_server
+  src/main.cpp
+  src/ecat_server.cpp)
 
-set(SRC_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/ecat_server.cpp
-)
-
-add_executable(ecat_server ${SRC_FILES})
+target_compile_features(ecat_server PUBLIC c_std_99 cxx_std_17)
 target_include_directories(ecat_server PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(ecat_server PUBLIC c_std_99 cxx_std_17)
-
-ament_target_dependencies(${PROJECT_NAME}
-  rclcpp
-  std_msgs
-  ecat_interfaces
-)
-
-install(TARGETS ecat_server
-  DESTINATION lib/${PROJECT_NAME})
+ament_target_dependencies(ecat_server
+  "ecat_interfaces"
+  "rclcpp"
+  "rclcpp_action"
+  "rclcpp_components"
+  "std_msgs")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -39,4 +42,5 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+install(TARGETS ecat_server DESTINATION lib/ecat_server)
 ament_package()
