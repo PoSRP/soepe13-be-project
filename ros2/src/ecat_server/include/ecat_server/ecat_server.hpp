@@ -22,8 +22,8 @@
 
 #include "ecat_interfaces/action/execute_move.hpp"
 
-
-namespace EtherCAT {
+namespace EtherCAT
+{
 
 class Server : public rclcpp::Node
 {
@@ -31,20 +31,26 @@ public:
   using ExecuteMove = ecat_interfaces::action::ExecuteMove;
   using ExecuteMoveGoalHandle = rclcpp_action::ServerGoalHandle<ExecuteMove>;
 
-  explicit Server(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
+  explicit Server(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
-  // Message publishers
+  // Topics
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _log_publisher;
+  // _network_status_publisher
+  // _execute_move_publisher /* To read feedback in gui when action caller is data node */
 
-  // Actions
+  // Services - StartNetwork
+  // Services - StopNetwork
+
+  // Actions - ExecuteMove
   rclcpp_action::Server<ExecuteMove>::SharedPtr _execute_move_action_server;
   rclcpp_action::GoalResponse _handle_execute_move_goal(
-		    const rclcpp_action::GoalUUID & uuid,
-		    std::shared_ptr<const ExecuteMove::Goal> goal);
+    const rclcpp_action::GoalUUID & uuid,
+    std::shared_ptr<const ExecuteMove::Goal> goal);
   rclcpp_action::CancelResponse _handle_execute_move_cancel(
     const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle);
-  void _handle_execute_move_accepted(const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle);
+  void _handle_execute_move_accepted(
+    const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle);
   void _execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle);
 
   // Parameters
@@ -54,6 +60,7 @@ private:
   // Member variables
   std::string _node_name;
   std::atomic_bool _execution_active;
+  std::atomic_bool _network_active;
 };
 
 } /* ns EtherCAT */
