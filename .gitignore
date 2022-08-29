@@ -14,9 +14,10 @@ ros2/log/
 
 # Eclipse project files
 ros2/**/build
-ros2/**/.cproject
-ros2/**/.project
-ros2/**/.settings/
+.autotools
+.cproject
+.project
+.settings/
 
 # Latex output
 latex/**/*.aux
