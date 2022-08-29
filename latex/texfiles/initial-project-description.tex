@@ -1,12 +1,12 @@
 \newcommand\pdescitemsep{-0.2em}
 \section{Initial project description}
 
-This project will attempt to tune and analyze a motor driver connected through EtherCAT inside a ROS2 environment. The EtherCAT connectivity will be handled be an open-source EtherCAT Master stack for Linux, \textit{Simple Open EtherCAT Master}.
+This project will attempt to develop an automatic system identification and controller tuning algorithm for use in EtherCAT servo drives using the CiA-402 communication protocol.
+The project will be developed in a ROS2 environment. 
+ 
+The EtherCAT connectivity will be handled be an open-source EtherCAT Master stack for Linux, \textit{Simple Open EtherCAT Master}.
 
 \href{https://github.com/OpenEtherCATsociety/soem}{https://github.com/OpenEtherCATsociety/soem}. 
-
-\noindent
-If time allows, additional activities such as estimating torque, losses, and setup parameters could also be included. 
 
 \subsection{Description}
 
@@ -37,23 +37,14 @@ Select drive parameters defined in the communication protocol will also be expos
 
 \subsubsection{Data Node}
 
-The data node will be responsible for managing automatic drive tuning algorithms and if included the parameters estimation algorithms. 
-It will call ROS Actions on the EtherCAT node and in turn receive position feedback for analysis. 
+The data node will be responsible for managing automatic drive tuning and system identification algorithms. 
+It will call control the EtherCAT Master node and in turn receive feedback for analysis. 
 
 \begin{itemize}
 	\setlength\itemsep{\pdescitemsep}
 	\item Analyze drive feedback
+	\item Algorithmically determine a system transfer function
 	\item Algorithmically tune drive parameters by executing actions on the Master
-\end{itemize}
-
-\noindent
-If time does allow it, the following additional activities could also be included:
-
-\begin{itemize}
-	\setlength\itemsep{\pdescitemsep}
-	\item Torque estimation
-	\item Setup inertia estimation
-	\item Setup loss estimation
 \end{itemize}
 
 \subsubsection{RQt plugin}
@@ -71,25 +62,24 @@ It will help in creating and viewing motion profiles as well as execute them on 
 
 \subsection{Investigation}
 
-The project will investigate how a system with multiple control parameters can be tuned algorithmically without knowing the exact effects of parameter changes beforehand. 
-It time allows it will also investigate how to derive motor torque, mass, inertia, losses, or other system parameters through the EtherCAT interface.
+The project will investigate how to determine a system transfer function within the CiA-402 standard. 
+It will also investigate how to apply a calculated transfer function to algorithmically tune control parameters without knowing the controller type beforehand. 
 
 \begin{itemize}
 	\setlength\itemsep{\pdescitemsep}
+	\item How to do system identification using the CiA-402 CAN profile
 	\item How to tune unknown motor control parameters
-	\item How to estimate system parameters using the CiA-402 CAN profile
 \end{itemize}
 
 \subsection{Experimentation}
 
-The developed algorithm for tuning EtherCAT drives will be compared to one or more other methods of tuning, such as manual tuning or manufacturer algorithms.
-Any results from system parameters estimation will also be compared to one or more other methods depending on the specific parameter. 
-If a torque parameter has been estimated, it will be compared to values reported from the torque controlled operational mode of the connected drive. 
+The developed algorithm for tuning controllers will be compared to one or more other methods of tuning, such as manual tuning or manufacturer algorithms.
+The system identification will be compared to classical approaches and an experimentally determined identification. 
 
 \begin{itemize}
 	\setlength\itemsep{\pdescitemsep}
 	\item Comparing results from motor controller tuning to result from other methods
-	\item Comparing estimated parameters to results from other methods
+	\item Comparing system identification results from other methods
 \end{itemize}
 
 %This project will focus on extending and examining the functionality of the SOEM library inside a ROS2 environment. This will be achieved as a two phase process. 
