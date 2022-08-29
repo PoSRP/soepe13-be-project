@@ -18,6 +18,7 @@ ros2/**/build
 .cproject
 .project
 .settings/
+.pydevproject
 
 # Latex output
 latex/**/*.aux
