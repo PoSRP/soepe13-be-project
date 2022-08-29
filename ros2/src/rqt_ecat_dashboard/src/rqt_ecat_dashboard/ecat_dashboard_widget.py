@@ -136,12 +136,11 @@ class EcatDashboardWidget(QWidget):
         self.log('Network stop result: ' + str(result))
 
     def handle_action_feedback_execute_move(self, feedback_msg):
-        time_data = feedback_msg.feedback.fb_time_data
-        value_data = feedback_msg.feedback.fb_value_data
+        time_data = feedback_msg.feedback.time_data
+        value_data = feedback_msg.feedback.value_data
         for index in range(len(time_data)):
-            self._action_feedback_model.appendRow([FloatStandardItem(str(time_data[index] /
-                                                                         1000000)),
-                                                   FloatStandardItem(str(value_data[index]))])
+            self._action_feedback_model.appendRow([FloatStandardItem(str(round(time_data[index], 5))),
+                                                   FloatStandardItem(str(round(value_data[index], 5)))])
             self.log(f'Received feedback: ({time_data[index]}, {value_data[index]})')
 
     def handle_action_result_execute_move(self, future):
@@ -168,35 +167,42 @@ class EcatDashboardWidget(QWidget):
         self._action_future = goal_handle.get_result_async()
         self._action_future.add_done_callback(self.handle_action_result_execute_move)
 
-    @staticmethod
-    def convert_profile_to_point_list(times, values, interval_us=1000, frequency=1000):
-        if frequency != 1000:
-            interval_us = int(1000000 / frequency)
-        time_idx = 0
-        loop_idx = 0
-        final_time = times[-1] * 1000000
-
-        input_idx = 2
-        t0, v0 = times[input_idx - 2], values[input_idx - 2]
-        t1, v1 = times[input_idx - 1], values[input_idx - 1]
+    def convert_profile_to_point_list(self, times, values, interval_us=1000, frequency=1000):
+        # Frequency and interval will behave as expected, server rate (1000Hz) is not set here
+        # The server will eventually host a parameter for setting it
+        interval_us = 1000
+        # if frequency != 1000:
+        #     interval_us = int(round(1000000 / frequency, 0))
 
         result_times = []
         result_values = []
-        while time_idx < final_time:
-            result_times.append(time_idx)
-            while time_idx > t1 and input_idx < len(times):
-                t0, v0 = t1, v1
-                t1, v1 = times[input_idx], values[input_idx]
-                input_idx += 1
+        input_idx = 0
 
+        while input_idx + 1 < len(times):
+            t0, v0 = times[input_idx] * 1000000, values[input_idx]
+            t1, v1 = times[input_idx + 1] * 1000000, values[input_idx + 1]
+            input_idx += 1
             dv = v1 - v0
             dt = t1 - t0
-            t = time_idx - t0 * 1000000
-            res = (dv / dt) * t + v0
-            result_values.append(res)
-
-            loop_idx += 1
-            time_idx += interval_us
+            time_index = 0
+            
+            while time_index <= dt:
+                # Skip if time point was calculated using previous values
+                if len(result_times) and float((time_index + t0)) / 1000000 == result_times[-1]:
+                    time_index += interval_us
+                    continue
+                
+                if dv == 0:
+                    result_values.append(float(v0))
+                else:
+                    result_values.append(float((dv / dt) * time_index + v0))
+                    
+                result_times.append(float((time_index + t0) / 1000000))
+                time_index += interval_us
+                
+                self.log(f'Point calculated: ({result_times[-1]}, {result_values[-1]})')
+        
+        self.log('Done calculating points')
         return result_times, result_values
 
     def btn_move_execute_clicked(self):
@@ -206,6 +212,7 @@ class EcatDashboardWidget(QWidget):
         # if self._cb_slave_mode.currentText() != self._cb_move_mode.currentText():
         #     self.log('Current move mode does not match with slave mode')
         #     return
+        # TODO: Check if the server is active, abort if not
 
         point_times = []
         point_values = []
@@ -215,8 +222,7 @@ class EcatDashboardWidget(QWidget):
             point_times.append(float(row[0].text()))
             point_values.append(float(row[1].text()))
 
-        time_data, value_data = self.convert_profile_to_point_list(point_times, point_values,
-                                                                   interval_us=10000)
+        time_data, value_data = self.convert_profile_to_point_list(point_times, point_values)
         self._action_client = ActionClient(self._node, ExecuteMove, 'execute_move')
         goal_msg = ExecuteMove.Goal()
         goal_msg.time_data = [float(i) for i in time_data]
@@ -318,7 +324,7 @@ class EcatDashboardWidget(QWidget):
         for line in lines:
             time, value = line.split(',')
             self._points_model.appendRow([FloatStandardItem(str(time)),
-                                         FloatStandardItem(str(value))])
+                                          FloatStandardItem(str(value))])
         # self._points_model.layoutChanged.emit()
         self._tv_points.sortByColumn(0, Qt.AscendingOrder)
         self.update_planned_graph()
@@ -388,8 +394,8 @@ class EcatDashboardWidget(QWidget):
                 vx = vy = 0.0
             else:
                 return
-        self._points_model.appendRow([FloatStandardItem(str(vy)),
-                                      FloatStandardItem(str(vx))])
+        self._points_model.appendRow([FloatStandardItem(str(round(vy, 5))),
+                                      FloatStandardItem(str(round(vx, 5)))])
         self._points_model.layoutChanged.emit()
         self._tv_points.sortByColumn(0, Qt.AscendingOrder)
         self.update_planned_graph()
@@ -556,7 +562,7 @@ class EcatDashboardWidget(QWidget):
         dt = datetime.fromtimestamp(time.time())
         sdt = dt.strftime('%H:%M:%S')
         self._te_log.append(sdt + ': ' + text)
-        self._logger.debug(text)
+        self._logger.info(text)
 
 
 class FloatStandardItem(QStandardItem):
