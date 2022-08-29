@@ -18,7 +18,10 @@ else
 fi
 
 colcon build --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
-colcon test
-colcon test-result --all --verbose
+
+if [[ ! ($1 == "--no-test" || $1 == '-n') ]]; then
+  colcon test
+  colcon test-result --all --verbose
+fi
 
 cd - > /dev/null
