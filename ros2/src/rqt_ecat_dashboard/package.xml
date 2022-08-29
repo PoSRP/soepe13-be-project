@@ -19,7 +19,7 @@
   <exec_depend>rqt_py_common</exec_depend>
   <exec_depend>rqt_console</exec_depend>
 
-  <exec_depend>pyqtgraph</exec_depend>
+  <exec_depend>python3-pyqtgraph</exec_depend>
 
   <export>
     <architecture_independent/>

@@ -11,6 +11,7 @@ fi
 
 cd $MY_PATH/../ros2
 
+rosdep install -iyr --from-path src --rosdistro humble 
 if [[ -f $PWD/install/setup.bash ]]; then
   source $PWD/install/setup.bash
 else
