@@ -1,3 +1,7 @@
 [submodule "libs/SOEM"]
 	path = libs/SOEM
 	url = https://github.com/OpenEtherCATsociety/SOEM.git
+[submodule "libs/ethercat_grant"]
+	path = libs/ethercat_grant
+	url = git@github.com:PoSRP/ethercat_grant.git
+	branch = devel
