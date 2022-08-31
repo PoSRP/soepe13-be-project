@@ -1,8 +1,7 @@
-float32[] time_data
-float32[] value_data
+int64[] time_data_ns
+int64[] position_data_um
 ---
-bool good
 string msg
 ---
-float32[] time_data
-float32[] value_data
+int64[] time_data_ns
+int64[] position_data_um

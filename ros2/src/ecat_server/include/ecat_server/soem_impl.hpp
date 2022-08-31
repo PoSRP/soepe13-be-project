@@ -11,9 +11,12 @@
 #include <assert.h>
 #include <inttypes.h>
 
+#include <map>
 #include <memory>
 #include <variant>
 #include <vector>
+
+#include "ecat_server/soem_impl.tpp"
 
 namespace EtherCAT
 {
@@ -30,7 +33,7 @@ struct controlword_t
   bool fault_reset : 1;       /* Bit 7 */
   bool halt : 1;              /* Bit 8 */
   bool op_mode_specific3 : 1; /* Bit 9 */
-  bool : 1;                   /* Bit 10 - Reserved and never used */
+  bool __reserved__ : 1;      /* Bit 10 - Reserved and never used */
   bool mfr_specific0 : 1;     /* Bit 11 */
   bool mfr_specific1 : 1;     /* Bit 12 */
   bool mfr_specific2 : 1;     /* Bit 13 */
@@ -135,29 +138,7 @@ struct __attribute__((__packed__)) cyclic_position_input_t
   int8_t operationmode_display;  // 0x6061h
 };
 
-enum class OD_TYPE { STR, UINT8, UINT16, UINT32 };
-
-class DictionaryObject
-{
-};
-
-static const std::vector<DictionaryObject> dictionary = {};
-
-namespace ECT60
-{
-
-bool setup(uint16_t slave)
-{
-  bool ret = false;
-
-  for (const DictionaryObject & object : dictionary) {
-    (void)0;
-  }
-
-  return ret;
-};
-
-}  // namespace ECT60
+static const std::map<EtherCAT::OD_KEY, EtherCAT::DictionaryObjectType> generic_od;
 
 }  // namespace EtherCAT
 

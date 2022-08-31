@@ -22,7 +22,9 @@ find_package(std_msgs REQUIRED)
 
 add_executable(ecat_server
   src/main.cpp
-  src/ecat_server.cpp)
+  src/ecat_server.cpp
+  src/soem_impl.cpp
+  src/rtelligent_ect60.cpp)
 
 target_compile_features(ecat_server PUBLIC c_std_99 cxx_std_17)
 target_include_directories(ecat_server PUBLIC
