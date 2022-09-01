@@ -13,7 +13,7 @@ int main(int argc, char ** argv)
   std::cout << "Hello world from ecat_server package" << std::endl;
 
   rclcpp::init(argc, argv);
-  auto srv = std::make_shared<EtherCAT::Server>();
+  auto srv = std::make_shared<soem_impl::Server>();
   rclcpp::spin(srv);
   rclcpp::shutdown();
 

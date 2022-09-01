@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-namespace EtherCAT
+namespace soem_impl
 {
 
 namespace ECT60

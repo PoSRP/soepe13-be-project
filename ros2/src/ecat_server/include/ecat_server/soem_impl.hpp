@@ -14,7 +14,9 @@
 #include <variant>
 #include <vector>
 
-namespace EtherCAT
+#include "ecat_server/generic_od.hpp"
+
+namespace soem_impl
 {
 
 struct controlword_t
@@ -134,6 +136,6 @@ struct __attribute__((__packed__)) cyclic_position_input_t
   int8_t operationmode_display;  // 0x6061h
 };
 
-}  // namespace EtherCAT
+}  // namespace soem_impl
 
 #endif /* ROS2_SRC_ECAT_SERVER_INCLUDE_ECAT_SERVER_SOEM_IMPL_HPP_ */

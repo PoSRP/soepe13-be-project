@@ -7,7 +7,7 @@
 
 #include "ecat_server/rtelligent_ect60.hpp"
 
-bool EtherCAT::ECT60::setup(uint16_t slave)
+bool soem_impl::ECT60::setup(uint16_t slave)
 {
   bool ret = false;
 

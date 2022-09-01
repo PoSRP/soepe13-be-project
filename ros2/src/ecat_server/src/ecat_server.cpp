@@ -2,7 +2,7 @@
 
 #include "ecat_server/soem_impl.hpp"
 
-using namespace EtherCAT;
+using namespace soem_impl;
 
 Server::Server(const rclcpp::NodeOptions & options)
 : Node("ecat_server_" + std::to_string(getpid())),
