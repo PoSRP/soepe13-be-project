@@ -8,15 +8,11 @@
 #ifndef ROS2_SRC_ECAT_SERVER_INCLUDE_ECAT_SERVER_SOEM_IMPL_HPP_
 #define ROS2_SRC_ECAT_SERVER_INCLUDE_ECAT_SERVER_SOEM_IMPL_HPP_
 
-#include <assert.h>
-#include <inttypes.h>
-
 #include <map>
 #include <memory>
+#include <type_traits>
 #include <variant>
 #include <vector>
-
-#include "ecat_server/soem_impl.tpp"
 
 namespace EtherCAT
 {
@@ -137,8 +133,6 @@ struct __attribute__((__packed__)) cyclic_position_input_t
   int32_t current_position;      // 0x6064h
   int8_t operationmode_display;  // 0x6061h
 };
-
-static const std::map<EtherCAT::OD_KEY, EtherCAT::DictionaryObjectType> generic_od;
 
 }  // namespace EtherCAT
 

@@ -30,12 +30,6 @@ Server::Server(const rclcpp::NodeOptions & options)
 rclcpp_action::GoalResponse Server::_handle_execute_move_goal(
   const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const ExecuteMove::Goal> goal)
 {
-  using namespace EtherCAT;
-  auto obj = _getOdObj(OD_KEY(0, 0));
-  if (obj) {
-    RCLCPP_INFO(get_logger(), "OD read: %s", obj->description);
-  }
-
   if (_execution_active.load()) {
     RCLCPP_INFO(get_logger(), "Move request rejected, another move is active");
     return rclcpp_action::GoalResponse::REJECT;
