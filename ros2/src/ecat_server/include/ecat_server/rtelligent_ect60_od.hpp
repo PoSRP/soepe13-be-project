@@ -54,7 +54,7 @@ inline const std::vector<const od_obj_t> od = {
 			"Maximum number of sub-indexes"),
 		od_obj_ent<uint8_t>(
 			1, 0, 1, 0,
-			OD_OBJ_PERM::RO, OD_OBJ_PDO::NO, OD_OBJ_CAT::REQUIRED,
+			OD_OBJ_PERM::RW, OD_OBJ_PDO::NO, OD_OBJ_CAT::REQUIRED,
 			"Save parameters")
 	}),
 	od_obj<uint8_t>(0x1011, "Restore factory settings", OD_OBJ_CAT::REQUIRED, {
@@ -64,7 +64,7 @@ inline const std::vector<const od_obj_t> od = {
 			"Maximum number of sub-indexes"),
 		od_obj_ent<uint8_t>(
 			1, 0, 1, 0,
-			OD_OBJ_PERM::RO, OD_OBJ_PDO::NO, OD_OBJ_CAT::REQUIRED,
+			OD_OBJ_PERM::RW, OD_OBJ_PDO::NO, OD_OBJ_CAT::REQUIRED,
 			"Save parameters")
 	}),
 	/* Manufacturer area */
