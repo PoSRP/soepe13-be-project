@@ -12,12 +12,17 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "ecat_interfaces/action/execute_move.hpp"
+#include "ecat_interfaces/srv/start_network.hpp"
+#include "ecat_interfaces/srv/stop_network.hpp"
+#include "ethercat.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -34,13 +39,30 @@ public:
   explicit Server(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
+  Server(const Server &) = delete;
+  Server & operator=(const Server &) = delete;
+  Server & operator=(Server &) = delete;
+
   // Topics
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _log_publisher;
-  // _network_status_publisher
-  // _execute_move_publisher /* To read feedback in gui when action caller is data node */
+  // TODO: Custom message type
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _network_status_publisher;
+  // TODO: Custom message type
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _execute_move_publisher;
 
   // Services - StartNetwork
+  rclcpp::Service<ecat_interfaces::srv::StartNetwork>::SharedPtr _srv_start_network;
   // Services - StopNetwork
+  rclcpp::Service<ecat_interfaces::srv::StopNetwork>::SharedPtr _srv_stop_network;
+
+  void _handle_srv_start_network(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<ecat_interfaces::srv::StartNetwork::Request> request,
+    std::shared_ptr<ecat_interfaces::srv::StartNetwork::Response> response);
+  void _handle_srv_stop_network(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<ecat_interfaces::srv::StopNetwork::Request> request,
+    std::shared_ptr<ecat_interfaces::srv::StopNetwork::Response> response);
 
   // Actions - ExecuteMove
   rclcpp_action::Server<ExecuteMove>::SharedPtr _execute_move_action_server;
@@ -52,16 +74,25 @@ private:
   void _execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle);
 
   // Parameters
-  std::string _network_interface_param;
-  uint64_t _network_cycle_time_us;
-  std::chrono::time_point<std::chrono::high_resolution_clock> _next_buffer_read;
+  std::string _network_interface_param{};
+  uint64_t _network_cycle_period_us_param{};
+  std::vector<std::pair<std::string, std::string>> slave_params{};
 
   // Member variables
   std::string _node_name;
-  std::atomic_bool _execution_active;
-  std::atomic_bool _network_active;
+  char io_map[4096];
+  std::atomic_bool _is_initialized{false};
+  std::atomic_bool _is_terminating{false};
+  std::chrono::time_point<std::chrono::high_resolution_clock> _next_buffer_read{};
+
+  OSAL_THREAD_HANDLE _ecat_thread{nullptr};
+  OSAL_THREAD_HANDLE _osal_thread{nullptr};
+
+  inline static std::atomic_bool _in_operation{false};
+  inline static int _expected_wkc{0};
+  inline static volatile int _wkc{0};
 };
 
-}  // namespace EtherCAT
+}  // namespace soem_impl
 
 #endif /* INCLUDE_ECAT_SERVER_ECAT_SERVER_HPP_ */

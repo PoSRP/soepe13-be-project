@@ -6,17 +6,18 @@ using namespace soem_impl;
 
 Server::Server(const rclcpp::NodeOptions & options)
 : Node("ecat_server_" + std::to_string(getpid())),
-  _network_interface_param(""),
-  _network_cycle_time_us(1000),
-  _node_name("ecat_server_" + std::to_string(getpid())),
-  _execution_active(false),
-  _network_active(false)
+  _node_name("ecat_server_" + std::to_string(getpid()))
 {
   using std::placeholders::_1;
   using std::placeholders::_2;
 
   // Message topics
   _log_publisher = create_publisher<std_msgs::msg::String>(_node_name + "/log", 10);
+
+  _network_status_publisher =
+    create_publisher<std_msgs::msg::String>(_node_name + "/network_status", 10);
+  _execute_move_publisher =
+    create_publisher<std_msgs::msg::String>(_node_name + "/execute_move_fb", 10);
 
   // Execute move action
   _execute_move_action_server = rclcpp_action::create_server<ExecuteMove>(
@@ -30,10 +31,11 @@ Server::Server(const rclcpp::NodeOptions & options)
 rclcpp_action::GoalResponse Server::_handle_execute_move_goal(
   const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const ExecuteMove::Goal> goal)
 {
-  if (_execution_active.load()) {
-    RCLCPP_INFO(get_logger(), "Move request rejected, another move is active");
+  if (_in_operation.load()) {
+    RCLCPP_INFO(get_logger(), "Move request rejected, another operation is active");
     return rclcpp_action::GoalResponse::REJECT;
   }
+  _in_operation.exchange(true);
 
   std::string data{};
   for (std::size_t i = 0; i < goal->time_data_ns.size(); i++) {
@@ -73,12 +75,11 @@ void Server::_handle_execute_move_accepted(const std::shared_ptr<ExecuteMoveGoal
 
 void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle)
 {
-  _execution_active.exchange(true);
   RCLCPP_INFO(get_logger(), "Executing move");
 
   // Note: This is not the execution cycle time, but the buffer update cycle time
   // TODO: Read next wake time set by OP thread, use that for sleep (_next_buffer_read)
-  double rate_hz = 1 / (_network_cycle_time_us / 1000000.0);
+  double rate_hz = 1 / (_network_cycle_period_us_param / 1000000.0);
   rclcpp::Rate loop_rate(rate_hz);
 
   const auto goal = goal_handle->get_goal();
@@ -101,7 +102,7 @@ void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_han
     if (goal_handle->is_canceling()) {
       result->msg = "Move was cancelled";
       RCLCPP_INFO(get_logger(), result->msg.c_str());
-      _execution_active.exchange(false);
+      _in_operation.exchange(false);
       return;
     }
 
@@ -130,7 +131,7 @@ void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_han
     result->msg = "Move completed";
     RCLCPP_INFO(get_logger(), result->msg.c_str());
   }
-  _execution_active.exchange(false);
+  _in_operation.exchange(false);
 
   // TODO: Missing return?
 }
