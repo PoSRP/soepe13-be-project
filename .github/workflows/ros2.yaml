@@ -17,8 +17,7 @@ jobs:
 
       - name: Install ethercat_grant
         shell: bash
-        run: |
-          ./scripts/ethercat_grant/install.sh
+        run: ./scripts/ethercat_grant/install.sh
 
       - name: Build using script
         shell: bash
