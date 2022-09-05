@@ -15,9 +15,10 @@ jobs:
           sudo ./scripts/ros2/install.sh
           ./scripts/ros2/post-install.sh
 
-      - name: Build library - SOEM
+      - name: Install ethercat_grant
         shell: bash
-        run: sudo ./scripts/soem/install.sh
+        run: |
+          ./scripts/ethercat_grant/install.sh
 
       - name: Build project
         shell: bash
@@ -27,14 +28,14 @@ jobs:
           cd ./ros2
           colcon build --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
 
-      - name: Run project tests
-        shell: bash
-        run: |
-          cd ./ros2
-          source ./install/setup.bash
-          colcon test
-          colcon test-result --all --verbose
+      # - name: Run project tests
+      #   shell: bash
+      #   run: |
+      #     cd ./ros2
+      #     source ./install/setup.bash
+      #     colcon test
+      #     colcon test-result --all --verbose
 
       - name: Build using script
         shell: bash
-        run: ./scripts/build-ros.sh
+        run: ./scripts/build-ros.sh -n
