@@ -23,6 +23,9 @@ if [[ ! -f $RCFILE ]]; then
   exit 2
 fi
 
+source $RCFILE
+source /opt/ros/humble/setup.$SHELL_TYPE
+
 git clone https://github.com/PoSRP/ethercat_grant.git
 cd ethercat_grant
 git checkout --track origin/devel
