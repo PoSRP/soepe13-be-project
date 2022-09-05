@@ -23,6 +23,8 @@ if [[ ! -f $RCFILE ]]; then
   exit 2
 fi
 
+sudo apt install -qy libpcap-dev libcap-dev
+
 source $RCFILE
 source /opt/ros/humble/setup.$SHELL_TYPE
 
