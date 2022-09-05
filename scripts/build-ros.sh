@@ -18,7 +18,6 @@ else
   source /opt/ros/humble/setup.bash
 fi
 
-colcon build --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON || true
 colcon build --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
 
 if [[ ! ($1 == "--no-test" || $1 == '-n') ]]; then
