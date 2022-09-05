@@ -23,11 +23,9 @@ if [[ ! -f $RCFILE ]]; then
   exit 2
 fi
 
-destination_dir="/home/$USER/ethercat_grant"
-mkdir $destination_dir
-
-git clone -b devel git@github.com:PoSRP/ethercat_grant.git $destination_dir
-cd $destination_dir
+git clone https://github.com/PoSRP/ethercat_grant.git
+cd ethercat_grant
+git checkout --track origin/devel
 
 mkdir build
 cd build
