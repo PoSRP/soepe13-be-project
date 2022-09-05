@@ -20,6 +20,8 @@ find_package(rclcpp_components REQUIRED)
 find_package(rosidl_runtime_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
 
+find_package(soem REQUIRED)
+
 add_executable(ecat_server
   src/main.cpp
   src/ecat_server.cpp
@@ -30,12 +32,14 @@ target_compile_features(ecat_server PUBLIC c_std_99 cxx_std_17)
 target_include_directories(ecat_server PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+  
 ament_target_dependencies(ecat_server
   "ecat_interfaces"
   "rclcpp"
   "rclcpp_action"
   "rclcpp_components"
-  "std_msgs")
+  "std_msgs"
+  "soem")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

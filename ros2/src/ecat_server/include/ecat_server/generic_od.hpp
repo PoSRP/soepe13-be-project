@@ -86,14 +86,7 @@ overloaded(Ts...) -> overloaded<Ts...>;
 static const std::vector<od_obj_t> generic_od = {};
 
 enum SM_DIR { IN, OUT };
-struct sm_t
-{
-  sm_t() {}
-  const uint8_t index;
-  const uint16_t address;
-  const uint16_t pdo_address;
-  const SM_DIR direction;
-};
+
 struct sm_conf_t
 {
   sm_conf_t(uint8_t && id, uint16_t && addr, SM_DIR && dir, std::vector<od_obj_t> objects)
