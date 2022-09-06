@@ -1,8 +1,0 @@
-[submodule "lib/ethercat_grant"]
-	path = lib/ethercat_grant
-	url = git@github.com:PoSRP/ethercat_grant.git
-	branch = devel
-[submodule "ros2/lib/soem"]
-	path = ros2/lib/soem
-	url = git@github.com:PoSRP/soem.git
-	branch = devel
