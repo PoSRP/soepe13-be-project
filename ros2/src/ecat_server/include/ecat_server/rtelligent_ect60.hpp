@@ -13,7 +13,7 @@
 namespace soem_impl
 {
 
-namespace ECT60
+namespace ect60
 {
 
 static bool setup(uint16_t slave);

@@ -7,9 +7,10 @@
 
 #include "ecat_server/rtelligent_ect60.hpp"
 
-bool soem_impl::ECT60::setup(uint16_t slave)
-{
-  bool ret = false;
+#include "ecat_server/rtelligent_ect60_od.hpp"
 
+bool soem_impl::ect60::setup(uint16_t slave)
+{
+  bool ret{false};
   return ret;
 }
