@@ -1,3 +1,0 @@
-[submodule "ros2/lib/soem"]
-	path = ros2/lib/soem
-	url = git@github.com:PoSRP/soem.git
