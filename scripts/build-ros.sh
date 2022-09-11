@@ -18,6 +18,7 @@ if [[ -f $PWD/install/setup.bash ]]; then
 fi
 
 colcon build --symlink-install --packages-select ecat_interfaces
+source $PWD/install/setup.bash
 colcon build --symlink-install --cmake-args ' -DSECURITY=ON' ' -DBUILD_TESTING=ON' ' -DCMAKE_BUILD_TYPE=Debug'
 
 if [[ ! ($1 == "--no-test" || $1 == '-n') ]]; then
