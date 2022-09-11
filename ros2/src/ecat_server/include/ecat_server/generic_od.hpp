@@ -23,24 +23,9 @@ enum class OD_OBJ_PDO { OPTIONAL, REQUIRED, NO };
 enum class OD_OBJ_CAT { OPTIONAL, REQUIRED };
 
 template <class T>
-struct od_obj
+class od_obj_ent
 {
-  using type = T;
-
-  od_obj(uint16_t && index, const char * desc, OD_OBJ_CAT && cat, std::vector<T> && entries)
-  : index(index), description(desc), category(cat), entries(entries)
-  {
-  }
-
-  const uint16_t index;
-  const char * description;
-  const OD_OBJ_CAT category;
-  const std::vector<T> entries;
-};
-
-template <class T>
-struct od_obj_ent
-{
+public:
   using type = T;
 
   od_obj_ent(
@@ -57,6 +42,7 @@ struct od_obj_ent
     description(desc)
   {
   }
+  ~od_obj_ent() {}
 
   const uint8_t sub_index;
   const std::optional<T> range_min;
@@ -68,9 +54,35 @@ struct od_obj_ent
   const char * description;
 };
 
+template <class T>
+class od_obj
+{
+public:
+  using type = T;
+
+  od_obj(uint16_t && index, const char * desc, OD_OBJ_CAT && cat)
+  : index(index), description(desc), category(cat)
+  {
+  }
+  ~od_obj() {}
+  void add_entry(const od_obj_ent<T> & entry) { entries.push_back(entry); }
+  const std::vector<od_obj_ent<T>> & get_entries() const { return entries; }
+
+  const uint16_t index;
+  const char * description;
+  const OD_OBJ_CAT category;
+
+private:
+  std::vector<od_obj_ent<T>> entries{};
+};
+
 template <class... Ts>
 using _var_t_ = std::variant<od_obj<Ts>...>;
+template <class... Ts>
+using _ent_var_t_ = std::variant<od_obj_ent<Ts>...>;
 using od_obj_t = _var_t_<int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t, const char *>;
+using od_obj_ent_t =
+  _ent_var_t_<int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t, const char *>;
 template <class... Ts>
 struct overloaded : Ts...
 {
@@ -83,16 +95,18 @@ overloaded(Ts...) -> overloaded<Ts...>;
 
 // TODO: This will be painful - and probably incomplete without
 // 		 access to the latest draft standard proposal :(
-static const std::vector<od_obj_t> generic_od = {};
+//static const std::vector<od_obj_t> generic_od;
 
 enum SM_DIR { IN, OUT };
 
-struct sm_conf_t
+class sm_conf_t
 {
+public:
   sm_conf_t(uint8_t && id, uint16_t && addr, SM_DIR && dir, std::vector<od_obj_t> objects)
   : id(id), addr(addr), dir(dir), objects(objects)
   {
   }
+  ~sm_conf_t() {}
   const uint8_t id;
   const uint16_t addr;
   const SM_DIR dir;
