@@ -19,6 +19,10 @@ jobs:
         shell: bash
         run: ./scripts/ethercat_grant/install.sh
 
+      - name: Install soem
+        shell: bash
+        run: ./scripts/soem/install.sh
+
       - name: Build using script
         shell: bash
         run: ./scripts/build-ros.sh -n
