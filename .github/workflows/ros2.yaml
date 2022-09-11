@@ -9,6 +9,10 @@ jobs:
       - name: Check-out repository
         uses: actions/checkout@v3
 
+      - name: Clone submodules
+        shell: bash
+        run: git submodule update --init --recursive
+
       - name: Install ROS2 humble
         shell: bash
         run: |
