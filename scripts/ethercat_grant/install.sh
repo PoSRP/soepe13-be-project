@@ -20,6 +20,9 @@ source /opt/ros/humble/setup.$shell_type
 
 cd $lib_path/ethercat_grant
 
+git submodule init .
+git submodule update .
+
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 if [[ $current_branch == "devel" ]]; then git pull; else git checkout -b devel origin/devel; fi
 
