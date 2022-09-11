@@ -2,16 +2,16 @@
 
 set -e
 
-REBUILD_LIMIT=5
+rebuild_limit=5
 
-MY_PATH=$(dirname $0)
-MY_PATH=$(cd $MY_PATH && pwd)
-if [ -z $MY_PATH ] ; then
-  printf "\nPath error: ${MY_PATH}\n"
+my_path=$(dirname $0)
+my_path=$(cd $my_path && pwd)
+if [ -z $my_path ] ; then
+  printf "\nPath error: ${my_path}\n"
   exit 1
 fi
 
-cd $MY_PATH/../latex/texfiles
+cd $my_path/../latex/texfiles
 
 files_to_remove=$(ls | { grep -E '.toc|.aux|.out|.log|.pdf' || test $? = 1; } || "")
 if [[ $files_to_remove != "" ]]; then
@@ -22,18 +22,17 @@ fi
 counter=1
 output=$(pdflatex main.tex)
 printf "\nBuild counter: ${counter}\n\n${output}\n\n"
-while [[ $output == *"(rerunfilecheck)"* && $counter -lt $REBUILD_LIMIT ]]; do
+while [[ $output == *"(rerunfilecheck)"* && $counter -lt $rebuild_limit ]]; do
   counter=$((counter + 1))
   output=$(pdflatex main.tex)
   printf "\nBuild counter: ${counter}\n\n${output}\n\n"
 done
 
-if [[ $counter -eq $REBUILD_LIMIT ]]; then
+if [[ $counter -eq $rebuild_limit ]]; then
   printf "Limited rebuilds to %d, PDF probably has errors.\n" $counter
   exit 1
 else
   printf "It took %d runs to complete the PDF.\n" $counter
 fi
 
-cd - > /dev/null
 exit 0

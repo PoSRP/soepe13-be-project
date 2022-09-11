@@ -2,14 +2,14 @@
 
 set -e
 
-MY_PATH=$(dirname $0)
-MY_PATH=$(cd $MY_PATH && pwd)
-if [ -z $MY_PATH ] ; then
-  printf "\nPath error: ${MY_PATH}\n"
+my_path=$(dirname $0)
+my_path=$(cd $my_path && pwd)
+if [ -z $my_path ] ; then
+  printf "\nPath error: ${my_path}\n"
   exit 1
 fi
 
-cd $MY_PATH/../ros2
+cd $my_path/../ros2
 
 source /opt/ros/humble/setup.bash
 rosdep install -iyr --from-path src --rosdistro humble 
@@ -25,4 +25,4 @@ if [[ ! ($1 == "--no-test" || $1 == '-n') ]]; then
   colcon test-result --all --verbose
 fi
 
-cd - > /dev/null
+exit 0
