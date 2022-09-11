@@ -17,6 +17,6 @@ echo "deb [arch=$(dpkg --print-architecture) \
 apt-get update -q
 apt-get install -qy ros-humble-desktop
 apt-get install -qy python3-colcon-ros python3-colcon-bash python3-colcon-zsh \
-  python3-rosdep libpcap-dev python3-pyqtgraph
+  python3-rosdep libpcap-dev python3-pyqtgraph python3-colcon-package-selection
 
 exit 0

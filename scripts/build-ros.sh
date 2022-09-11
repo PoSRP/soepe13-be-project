@@ -17,8 +17,8 @@ if [[ -f $PWD/install/setup.bash ]]; then
   source $PWD/install/setup.bash
 fi
 
-colcon build --packages-select ecat_interfaces
-colcon build --symlink-install --cmake-args -DSECURITY=ON -DBUILD_TESTING=ON
+colcon build --symlink-install --packages-select ecat_interfaces
+colcon build --symlink-install --cmake-args ' -DSECURITY=ON' ' -DBUILD_TESTING=ON' ' -DCMAKE_BUILD_TYPE=Debug'
 
 if [[ ! ($1 == "--no-test" || $1 == '-n') ]]; then
   colcon test
