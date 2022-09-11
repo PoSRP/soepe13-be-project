@@ -11,11 +11,10 @@ fi
 
 cd $MY_PATH/../ros2
 
+source /opt/ros/humble/setup.bash
 rosdep install -iyr --from-path src --rosdistro humble 
 if [[ -f $PWD/install/setup.bash ]]; then
   source $PWD/install/setup.bash
-else
-  source /opt/ros/humble/setup.bash
 fi
 
 colcon build --packages-select ecat_interfaces
