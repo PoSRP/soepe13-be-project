@@ -2,42 +2,37 @@
 
 set -e
 
-case $SHELL in 
-  */bash)
-    SHELL_TYPE=bash
-    RCFILE=/home/$USER/.bashrc;;
-  */zsh)
-    SHELL_TYPE=zsh
-    RCFILE=/home/$USER/.zshrc;;
-  *)
-    SHELL_TYPE=sh;;
-esac
+launch_path=$(pwd)
+script_path=$(dirname $0)
+script_path=$(cd $script_path && pwd)
+lib_path=$script_path/../../lib
+shell_type=bash
+rcfile=/home/$USER/.bashrc
 
-if [[ ! -f /opt/ros/humble/setup.$SHELL_TYPE ]]; then
-  printf "NO ROS2 HUMBLE SETUP FILE FOUND: /opt/ros/humble/setup.$SHELL_TYPE \n"
-  exit 1
-fi
+if [ -z $script_path ]; then printf "\nPATH ERROR: $script_path\n\n" && exit 1; fi
+if [[ ! -f /opt/ros/humble/setup.$shell_type ]]; then printf "\nNO ROS2 HUMBLE SETUP FILE FOUND: /opt/ros/humble/setup.$SHELL_TYPE\n\n" && exit 1; fi
+if [[ ! -f $rcfile ]]; then printf "\nNO RC FILE FOUND: $rcfile\n\n" && exit 2; fi
 
-if [[ ! -f $RCFILE ]]; then
-  printf "NO RC FILE FOUND: $RCFILE \n"
-  exit 2
-fi
+source $rcfile
+source /opt/ros/humble/setup.$shell_type
 
-sudo apt install -qy libpcap-dev libcap-dev
+sudo apt-get install -qy libpcap-dev libcap-dev
 
-source $RCFILE
-source /opt/ros/humble/setup.$SHELL_TYPE
+source $rcfile
+source /opt/ros/humble/setup.$shell_type
 
+if [ ! -d $lib_path ]; then mkdir $lib_path; fi
+cd $lib_path
 git clone https://github.com/PoSRP/ethercat_grant.git
 cd ethercat_grant
 git checkout --track origin/devel
 
 mkdir build
 cd build
-
 sudo ../scripts/preinst
 cmake ..
 sudo make install
 sudo ../scripts/postinst configure
 
+cd $launch_path
 exit 0
