@@ -10,16 +10,11 @@ if [ -z $my_path ] ; then
 fi
 
 cd $my_path/../ros2
-
 source /opt/ros/humble/setup.bash
 rosdep install -iyr --from-path src --rosdistro humble 
-if [[ -f $PWD/install/setup.bash ]]; then
-  source $PWD/install/setup.bash
-fi
-
-colcon build --symlink-install --packages-select ecat_interfaces
-source $PWD/install/setup.bash
-colcon build --symlink-install --cmake-args ' -DSECURITY=ON' ' -DBUILD_TESTING=ON' ' -DCMAKE_BUILD_TYPE=Debug'
+cmake_args="--cmake-args ' -DSECURITY=ON' ' -DBUILD_TESTING=ON' ' -DCMAKE_BUILD_TYPE=Debug'"
+colcon build --symlink-install --packages-select ecat_interfaces ${cmake_args}
+colcon build --symlink-install ${cmake_args}
 
 if [[ ! ($1 == "--no-test" || $1 == '-n') ]]; then
   colcon test
