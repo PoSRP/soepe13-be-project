@@ -113,6 +113,42 @@ public:
   const std::vector<od_obj_t> objects;
 };
 
+inline std::optional<od_obj_ent_t> find_obj(
+  const std::pair<uint16_t, uint8_t> idx, const std::vector<od_obj_t> & od)
+{
+  for (auto & obj : od) {
+    if (std::visit(
+          [&](auto && arg) -> bool {
+            if (arg.index == idx.first) {
+              for (auto & ent : arg.get_entries()) {
+                if (ent.sub_index == idx.second) return true;
+              }
+            }
+            return false;
+          },
+          obj)) {
+      return std::visit(
+        [&](auto && arg) -> od_obj_ent_t { return arg.get_entries().at(idx.second); }, obj);
+    }
+  }
+  return std::nullopt;
+}
+
+inline bool setup(
+  const uint16_t slave, const std::vector<std::pair<uint16_t, uint8_t>> idx_list,
+  const std::vector<od_obj_t> & od)
+{
+  (void)slave;
+  std::vector<od_obj_ent_t> tmp;
+  for (const auto & idx : idx_list) {
+    if (auto obj = find_obj(idx, od); obj != std::nullopt)
+      tmp.push_back(*obj);
+    else
+      return false;
+  }
+  return true;
+}
+
 }  //namespace soem_impl
 
 #endif /* ROS2_SRC_ECAT_SERVER_INCLUDE_ECAT_SERVER_GENERIC_OD_HPP_ */

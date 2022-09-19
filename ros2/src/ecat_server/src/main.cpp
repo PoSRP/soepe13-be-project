@@ -17,7 +17,7 @@ int main(int argc, char ** argv)
   soem_impl::ect60::init_od();
 
   // Call during PRE_OP as a setup callback function
-  soem_impl::ect60::setup(1, {{0x1000, 0}, {0x1001, 0}});
+  soem_impl::setup(1, {{0x1000, 0}, {0x1001, 0}}, soem_impl::ect60::od);
 
   rclcpp::init(argc, argv);
   auto srv = std::make_shared<soem_impl::Server>();
