@@ -75,6 +75,7 @@ void Server::_handle_execute_move_accepted(const std::shared_ptr<ExecuteMoveGoal
 
 void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle)
 {
+  constexpr int fb_array_max = 500;
   RCLCPP_INFO(get_logger(), "Executing move");
 
   // Note: This is not the execution cycle time, but the buffer update cycle time
@@ -110,8 +111,27 @@ void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_han
 
     time_fb.push_back(time_vec[i]);
     value_fb.push_back(value_vec[i]);
-    goal_handle->publish_feedback(feedback);
 
+    if (time_fb.size() >= fb_array_max) {
+      goal_handle->publish_feedback(feedback);
+      std::string data{};
+      for (std::size_t i = 0; i < time_fb.size(); i++) {
+        data += std::to_string(counter) + ": (" + std::to_string(time_fb.at(i)) + ", " +
+          std::to_string(value_fb.at(i)) + ")";
+        if (i < goal->time_data_ns.size() - 1) {
+          data += "; ";
+        }
+      }
+      time_fb.clear();
+      value_fb.clear();
+      RCLCPP_INFO(get_logger(), "Sent feedback: %s", data.c_str());
+    }
+
+    loop_rate.sleep();
+  }
+
+  if (time_fb.size()) {
+    goal_handle->publish_feedback(feedback);
     std::string data{};
     for (std::size_t i = 0; i < time_fb.size(); i++) {
       data += std::to_string(counter) + ": (" + std::to_string(time_fb.at(i)) + ", " +
@@ -120,11 +140,9 @@ void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_han
         data += "; ";
       }
     }
-    RCLCPP_INFO(get_logger(), "Sent feedback: %s", data.c_str());
-
     time_fb.clear();
     value_fb.clear();
-    loop_rate.sleep();
+    RCLCPP_INFO(get_logger(), "Sent feedback: %s", data.c_str());
   }
 
   if (rclcpp::ok()) {
