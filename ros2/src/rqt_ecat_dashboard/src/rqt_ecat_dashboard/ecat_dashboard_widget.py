@@ -225,8 +225,8 @@ class EcatDashboardWidget(QWidget):
         time_data, value_data = self.convert_profile_to_point_list(point_times, point_values)
         self._action_client = ActionClient(self._node, ExecuteMove, 'execute_move')
         goal_msg = ExecuteMove.Goal()
-        goal_msg.time_data_ns = [float(i * 10**9 ) for i in time_data]  # Multiply up to seconds
-        goal_msg.position_data_um = [float(i * 10**3) for i in value_data]  # Multiply up to millimeters
+        goal_msg.time_data_ns = [float(i / 10**9 ) for i in time_data]  # Multiply up to seconds
+        goal_msg.position_data_um = [float(i / 10**3) for i in value_data]  # Multiply up to millimeters
 
         self._action_client.wait_for_server()
         self._action_future = self._action_client.send_goal_async(
