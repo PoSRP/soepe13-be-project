@@ -136,8 +136,8 @@ class EcatDashboardWidget(QWidget):
         self.log('Network stop result: ' + str(result))
 
     def handle_action_feedback_execute_move(self, feedback_msg):
-        time_data = feedback_msg.feedback.time_data
-        value_data = feedback_msg.feedback.value_data
+        time_data = [float(i / 10**9) for i in feedback_msg.feedback.time_data_ns]
+        value_data = [float(i / 10**3) for i in feedback_msg.feedback.position_data_um]
         for index in range(len(time_data)):
             self._action_feedback_model.appendRow([FloatStandardItem(str(round(time_data[index], 5))),
                                                    FloatStandardItem(str(round(value_data[index], 5)))])
