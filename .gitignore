@@ -32,3 +32,6 @@ latex/**/*.toc
 
 # HTML version of README
 README.html
+
+# Libreoffice lock
+**/.~lock*
