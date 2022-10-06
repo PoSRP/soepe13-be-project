@@ -14,6 +14,7 @@ source /opt/ros/humble/setup.bash
 rosdep install -iyr --from-path src --rosdistro humble 
 cmake_args="-DSECURITY=ON -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Debug"
 colcon build --symlink-install --packages-select ecat_interfaces --cmake-args ${cmake_args}
+source /opt/ros/humble/setup.bash
 colcon build --symlink-install --cmake-args ${cmake_args}
 
 if [[ ! ($1 == "--no-test" || $1 == '-n') ]]; then
