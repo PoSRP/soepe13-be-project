@@ -6,7 +6,8 @@ using namespace soem_impl;
 
 Server::Server(const rclcpp::NodeOptions & options)
 : Node("ecat_server_" + std::to_string(getpid())),
-  _node_name("ecat_server_" + std::to_string(getpid()))
+  _node_name("ecat_server_" + std::to_string(getpid())),
+  ecat_master(_network_interface_param)
 {
   using std::placeholders::_1;
   using std::placeholders::_2;
@@ -19,23 +20,67 @@ Server::Server(const rclcpp::NodeOptions & options)
   _execute_move_publisher =
     create_publisher<std_msgs::msg::String>(_node_name + "/execute_move_fb", 10);
 
-  // Execute move action
+  // Move action
   _execute_move_action_server = rclcpp_action::create_server<ExecuteMove>(
     get_node_base_interface(), get_node_clock_interface(), get_node_logging_interface(),
     get_node_waitables_interface(), "execute_move",
     std::bind(&Server::_handle_execute_move_goal, this, _1, _2),
     std::bind(&Server::_handle_execute_move_cancel, this, _1),
     std::bind(&Server::_handle_execute_move_accepted, this, _1));
+
+  // EtherCAT backend
+  ecat_master.async_spin();
 }
 
+/**
+ * Service NetworkCtrl
+ **/
+void Server::_handle_srv_network_ctrl(
+  const std::shared_ptr<rmw_request_id_t> request_header,
+  const std::shared_ptr<ecat_interfaces::srv::NetworkCtrl::Request> request,
+  std::shared_ptr<ecat_interfaces::srv::NetworkCtrl::Response> response)
+{
+  using ecat_interfaces::srv::NetworkCtrl;
+
+  switch (request->action) {
+    case NetworkCtrl::Request::START:
+      if (_network_active.load()) {
+        const char * err_str = "Network control request rejected: Network already active";
+        RCLCPP_ERROR(get_logger(), err_str);
+        response->result = NetworkCtrl::Response::ERROR;
+        response->msg = err_str;
+      } else {
+      }
+      break;
+
+    case NetworkCtrl::Request::STOP:
+      if (!_network_active.load()) {
+        const char * err_str = "Network control request rejected: Network already inactive";
+        RCLCPP_ERROR(get_logger(), err_str);
+        response->result = NetworkCtrl::Response::ERROR;
+        response->msg = err_str;
+      } else {
+      }
+      break;
+  }
+}
+
+/**
+ * Action ExecuteMove - Handle Goal
+ **/
 rclcpp_action::GoalResponse Server::_handle_execute_move_goal(
   const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const ExecuteMove::Goal> goal)
 {
-  if (_in_operation.load()) {
-    RCLCPP_INFO(get_logger(), "Move request rejected, another operation is active");
+  if (!_network_active.load(std::memory_order_relaxed)) {
+    RCLCPP_WARN(get_logger(), "Move request rejected, network is not active");
     return rclcpp_action::GoalResponse::REJECT;
   }
-  _in_operation.exchange(true);
+
+  auto is_running = false;
+  if (!_move_active.compare_exchange_strong(is_running, true, std::memory_order_relaxed)) {
+    RCLCPP_WARN(get_logger(), "Move request rejected, another operation is active");
+    return rclcpp_action::GoalResponse::REJECT;
+  }
 
   std::string data{};
   for (std::size_t i = 0; i < goal->time_data_ns.size(); i++) {
@@ -47,7 +92,7 @@ rclcpp_action::GoalResponse Server::_handle_execute_move_goal(
   }
 
   if (data.empty()) {
-    RCLCPP_INFO(get_logger(), "Move request rejected, no data provided");
+    RCLCPP_WARN(get_logger(), "Move request rejected, no data provided");
     return rclcpp_action::GoalResponse::REJECT;
   }
 
@@ -56,16 +101,22 @@ rclcpp_action::GoalResponse Server::_handle_execute_move_goal(
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
+/**
+ * Action ExecuteMove - Handle Cancel
+ **/
 rclcpp_action::CancelResponse Server::_handle_execute_move_cancel(
   const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle)
 {
   auto result = std::make_shared<ExecuteMove::Result>();
   result->msg = "Move aborted by cancel request";
-  RCLCPP_INFO(get_logger(), result->msg.c_str());
+  RCLCPP_WARN(get_logger(), result->msg.c_str());
   goal_handle->canceled(result);
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
+/**
+ * Action ExecuteMove - Handle Accept
+ **/
 void Server::_handle_execute_move_accepted(const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle)
 {
   using std::placeholders::_1;
@@ -73,6 +124,9 @@ void Server::_handle_execute_move_accepted(const std::shared_ptr<ExecuteMoveGoal
   std::thread{std::bind(&Server::_execute_move, this, _1), goal_handle}.detach();
 }
 
+/**
+ * Action ExecuteMove - Handle Execution
+ **/
 void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_handle)
 {
   constexpr int fb_array_max = 500;
@@ -102,8 +156,8 @@ void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_han
   for (std::size_t i = 0; (i < time_vec.size()) && rclcpp::ok(); i++) {
     if (goal_handle->is_canceling()) {
       result->msg = "Move was cancelled";
-      RCLCPP_INFO(get_logger(), result->msg.c_str());
-      _in_operation.exchange(false);
+      RCLCPP_WARN(get_logger(), result->msg.c_str());
+      _move_active.exchange(false);
       return;
     }
 
@@ -149,7 +203,5 @@ void Server::_execute_move(const std::shared_ptr<ExecuteMoveGoalHandle> goal_han
     result->msg = "Move completed";
     RCLCPP_INFO(get_logger(), result->msg.c_str());
   }
-  _in_operation.exchange(false);
-
-  // TODO: Missing return?
+  _move_active.exchange(false);
 }

@@ -141,7 +141,7 @@ class EcatDashboardWidget(QWidget):
         for index in range(len(time_data)):
             self._action_feedback_model.appendRow([FloatStandardItem(str(round(time_data[index], 5))),
                                                    FloatStandardItem(str(round(value_data[index], 5)))])
-            self.log(f'Received feedback: ({time_data[index]}, {value_data[index]})')
+        self.log(f'Received feedback: ({[i for i in time_data]}, {[i for i in value_data]})')
 
     def handle_action_result_execute_move(self, future):
         result = future.result().result
@@ -209,6 +209,7 @@ class EcatDashboardWidget(QWidget):
         if self._action_client is not None:
             self.log('The action client is already active')
             return
+        self._action_client = ActionClient(self._node, ExecuteMove, 'execute_move')
         # if self._cb_slave_mode.currentText() != self._cb_move_mode.currentText():
         #     self.log('Current move mode does not match with slave mode')
         #     return

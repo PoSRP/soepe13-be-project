@@ -16,15 +16,18 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
 #include "ecat_interfaces/action/execute_move.hpp"
+#include "ecat_interfaces/srv/network_ctrl.hpp"
 #include "ecat_interfaces/srv/start_network.hpp"
 #include "ecat_interfaces/srv/stop_network.hpp"
 #include "ethercat.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
+#include "soem_impl.hpp"
 #include "std_msgs/msg/string.hpp"
 
 namespace soem_impl
@@ -50,21 +53,14 @@ private:
   // TODO: Custom message type
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr _execute_move_publisher;
 
-  // Services - StartNetwork
-  rclcpp::Service<ecat_interfaces::srv::StartNetwork>::SharedPtr _srv_start_network;
-  // Services - StopNetwork
-  rclcpp::Service<ecat_interfaces::srv::StopNetwork>::SharedPtr _srv_stop_network;
-
-  void _handle_srv_start_network(
+  // Service - Network Control
+  rclcpp::Service<ecat_interfaces::srv::NetworkCtrl>::SharedPtr _srv_network_ctrl;
+  void _handle_srv_network_ctrl(
     const std::shared_ptr<rmw_request_id_t> request_header,
-    const std::shared_ptr<ecat_interfaces::srv::StartNetwork::Request> request,
-    std::shared_ptr<ecat_interfaces::srv::StartNetwork::Response> response);
-  void _handle_srv_stop_network(
-    const std::shared_ptr<rmw_request_id_t> request_header,
-    const std::shared_ptr<ecat_interfaces::srv::StopNetwork::Request> request,
-    std::shared_ptr<ecat_interfaces::srv::StopNetwork::Response> response);
+    const std::shared_ptr<ecat_interfaces::srv::NetworkCtrl::Request> request,
+    std::shared_ptr<ecat_interfaces::srv::NetworkCtrl::Response> response);
 
-  // Actions - ExecuteMove
+  // Actions - Execute Move
   rclcpp_action::Server<ExecuteMove>::SharedPtr _execute_move_action_server;
   rclcpp_action::GoalResponse _handle_execute_move_goal(
     const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const ExecuteMove::Goal> goal);
@@ -85,12 +81,18 @@ private:
   std::atomic_bool _is_terminating{false};
   std::chrono::time_point<std::chrono::high_resolution_clock> _next_buffer_read{};
 
-  OSAL_THREAD_HANDLE _ecat_thread{nullptr};
-  OSAL_THREAD_HANDLE _osal_thread{nullptr};
+  inline static std::atomic<bool> _network_active{false};
+  inline static std::atomic<bool> _move_active{false};
 
-  inline static std::atomic_bool _in_operation{false};
-  inline static int _expected_wkc{0};
-  inline static volatile int _wkc{0};
+  // SOEM backend
+  master_node ecat_master;
+  //  OSAL_THREAD_HANDLE _ecat_thread{nullptr};
+  //  OSAL_THREAD_HANDLE _osal_thread{nullptr};
+  //  inline static int _expected_wkc{0};
+  //  inline static volatile int _wkc{0};
+  //  static OSAL_THREAD_FUNC _ecat_thread_function();
+  //  static OSAL_THREAD_FUNC _osal_thread_function();
+  //  static void _ecat_init();
 };
 
 }  // namespace soem_impl

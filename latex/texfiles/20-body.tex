@@ -1,0 +1,54 @@
+\section{Overview}
+
+\subsection{Mechanical setup}
+
+Hey thats a good photo you got there.
+
+Linear rail with ~45cm motion, ECT60 controller, some stepper, some encoder, some plastics.
+
+\subsection{EtherCAT library selection}
+
+Various libraries for interfacing with the EtherCAT network stack are available. 
+
+\begin{itemize}
+	\item SimpleOpenEthercatMaster [SOEM]
+	\item Manufacturer implementations
+	\item EcMaster
+	\item EtherLab
+\end{itemize}
+
+The SOEM library was selected due to many good things and open-source-ness.
+
+The standard is still not fully developed? 
+
+\subsection{ROS application structure}
+
+Wow, that's a really cool illustration here.
+
+\subsubsection{Real-time control node}
+
+This node runs the real-time loop.
+
+\subsubsection{Tuning strategy node}
+
+This node manages the real-time controlling node and does calculations, planning, bla bla.
+
+\subsubsection{User-facing node}
+
+This node provides an interface to view and interact with the ROS system. 
+
+\section{Controller setup}
+
+\subsection{Control parameters}
+
+
+
+\section{System identification}
+
+\subsection{Integration with MATLAB}
+
+\section{Controller tuning}
+
+\subsection{Parameter selection and determination}
+\subsection{Optimizing motion response}
+\subsection{Vibration reduction}

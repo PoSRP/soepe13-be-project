@@ -8,16 +8,59 @@
 #ifndef ROS2_SRC_ECAT_SERVER_INCLUDE_ECAT_SERVER_SOEM_IMPL_HPP_
 #define ROS2_SRC_ECAT_SERVER_INCLUDE_ECAT_SERVER_SOEM_IMPL_HPP_
 
+#include <atomic>
 #include <map>
 #include <memory>
+#include <string>
 #include <type_traits>
 #include <variant>
 #include <vector>
 
-#include "ecat_server/generic_od.hpp"
+//#include "ecat_server/generic_od.hpp"
+#include "ethercat.h"
 
 namespace soem_impl
 {
+
+#define EC_TIMEOUTMON 500
+
+enum class slave_op_mode : int8_t { CYCLIC_POSITION = 8 };
+
+enum class slave_op_state : uint16_t {
+  NOT_READY_TO_SWITCH_ON = 0b0000000000000000,
+  FAULT = 0b0000000000101000,
+  FAULT_REACTION_ACTIVE = 0b0000000000101111,
+  SWITCH_ON_DISABLED = 0b0000000001100000,
+  READY_TO_SWITCH_ON = 0b0000000000100001,
+  SWITCHED_ON = 0b0000000000100011,
+  OPERATION_ENABLED = 0b0000000000100111,
+  QUICK_STOP_ACTIVE = 0b0000000000000111,
+  INVALID,
+  MASK = 0b0000000001101111
+};
+
+const std::map<slave_op_state, const char *> slave_op_status_str{
+  {slave_op_state::NOT_READY_TO_SWITCH_ON, "NOT_READY_TO_SWITCH_ON"},
+  {slave_op_state::FAULT, "FAULT"},
+  {slave_op_state::FAULT_REACTION_ACTIVE, "FAULT_REACTION_ACTIVE"},
+  {slave_op_state::SWITCH_ON_DISABLED, "SWITCH_ON_DISABLED"},
+  {slave_op_state::READY_TO_SWITCH_ON, "READY_TO_SWITCH_ON"},
+  {slave_op_state::SWITCHED_ON, "SWITCHED_ON"},
+  {slave_op_state::OPERATION_ENABLED, "OPERATION_ENABLED"},
+  {slave_op_state::QUICK_STOP_ACTIVE, "QUICK_STOP_ACTIVE"},
+  {slave_op_state::INVALID, "INVALID"},
+  {slave_op_state::MASK, "MASK"}};
+
+enum class slave_op_command : uint16_t {
+  DISABLE_OPERATION,
+  DISABLE_VOLTAGE,
+  ENABLE_OPERATION,
+  FAULT_RESET,
+  QUICK_STOP,
+  SHUTDOWN,
+  SWITCH_ON,
+  SWITCH_ON_AND_ENABLE_OPERATION,
+};
 
 struct controlword_t
 {
@@ -99,6 +142,7 @@ struct statusword_t
     mfr_specific1 = (0b0100000000000000 & new_value) >> 14;
     mfr_specific2 = (0b1000000000000000 & new_value) >> 15;
   }
+
   uint16_t uint16()
   {
     uint16_t ret{0};
@@ -134,6 +178,96 @@ struct __attribute__((__packed__)) cyclic_position_input_t
   statusword_t statusword;       // 0x6041h
   int32_t current_position;      // 0x6064h
   int8_t operationmode_display;  // 0x6061h
+};
+
+inline const std::map<uint16_t, const char *> ec_state2string{
+  {EC_STATE_ACK, "ACK"},       {EC_STATE_BOOT, "BOOT"},       {EC_STATE_ERROR, "ERROR"},
+  {EC_STATE_INIT, "INIT"},     {EC_STATE_NONE, "NONE"},       {EC_STATE_OPERATIONAL, "OPERATIONAL"},
+  {EC_STATE_PRE_OP, "PRE_OP"}, {EC_STATE_SAFE_OP, "SAFE_OP"},
+};
+
+struct slave_configuration_t
+{
+  const char * name;
+  slave_op_mode mode;
+  const uint16_t aliasaddr;
+  uint16_t io_idx;
+
+  // TODO: Some container for configuration stuff
+};
+
+template <class T>
+struct setup_value
+{
+  uint16_t index;
+  uint16_t sub_index;
+  T value;
+};
+
+template <class... Ts>
+using var_t = std::variant<setup_value<Ts>...>;
+using variant_types = var_t<uint8_t, uint16_t, uint32_t, int8_t, int16_t, int32_t>;
+template <class... Ts>
+struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+class master_node
+{
+public:
+  explicit master_node(const std::string & ifname);
+
+  bool setup_slave();
+  bool async_spin();
+  bool is_terminating() const;
+  void stop();
+
+  std::map<uint16_t, int32_t> read();
+  void write(const std::map<uint16_t, int32_t> & vars);
+
+private:
+  master_node() = delete;
+  master_node(const master_node &) = delete;
+  master_node & operator=(const master_node &) = delete;
+  master_node & operator=(master_node &) = delete;
+
+  // Main ecat function
+  OSAL_THREAD_FUNC _ecat_thread_function();
+  /* Background thread checker function */
+  OSAL_THREAD_FUNC _error_thread_function();
+
+  /* Initialization main thread */
+  void _initialize();
+
+  /* Move a slave to specific operation mode */
+  bool _set_slave_op_mode(uint16_t slave, slave_op_mode mode);
+  /* Move a slave to specific operation state */
+  bool _set_slave_op_state(uint16_t slave, slave_op_state state);
+  /* Invoke a specific command on the slave controlword */
+  bool _write_slave_control(uint16_t slave, slave_op_command);
+  /* Return the current status / OP state for a slave */
+  slave_op_state _get_slave_status(uint16_t slave);
+
+private:
+  std::vector<slave_configuration_t> _slave_configurations;
+
+  inline static const int _io_map_size = 4096;
+  char _io_map[_io_map_size];
+
+  int _cycle_period_us{2000};
+  std::string _interface_name{""};
+
+  std::atomic_bool _is_terminating{false};
+  std::atomic_bool _is_initialized{false};
+  OSAL_THREAD_HANDLE _ecat_thread{nullptr};
+  OSAL_THREAD_HANDLE _error_thread{nullptr};
+
+  inline static std::atomic_bool _in_operation{false};
+  inline static int _expected_working_counter{0};
+  inline static volatile int _working_counter{0};
 };
 
 }  // namespace soem_impl

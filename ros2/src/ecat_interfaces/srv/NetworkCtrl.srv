@@ -1,0 +1,10 @@
+int8 action
+
+int8 START=0        #
+int8 STOP=1         #
+---
+int8 result
+string msg
+
+int8 ERROR=0    #
+int8 SUCCESS=1  #
