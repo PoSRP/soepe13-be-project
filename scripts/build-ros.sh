@@ -2,6 +2,13 @@
 
 set -e
 
+if [[ $1 == "-h" || $1 == "--help" ]]; then
+  printf "$0 <arg>\n"
+  printf "  --no-test | -n    - Disable running tests\n"
+  printf "  --help    | -h    - Show this message\n"
+  exit
+fi
+
 my_path=$(dirname $0)
 my_path=$(cd $my_path && pwd)
 if [ -z $my_path ] ; then
