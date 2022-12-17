@@ -312,7 +312,7 @@ OSAL_THREAD_FUNC master_node::_error_thread_function()
 {
   int slave;
 
-  while (1) {
+  while (!_is_terminating) {
     RCLCPP_WARN(
       rclcpp::get_logger("SOEM CHECKER"), "In OP: %d WKC: %d, eWKC: %d, Master Check: %d",
       _in_operation.load(), _working_counter, _expected_working_counter, ec_group[0].docheckstate);

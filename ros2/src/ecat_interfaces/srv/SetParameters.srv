@@ -1,0 +1,5 @@
+int64 slave_index
+ecat_interfaces/Parameter[] parameters
+---
+bool success
+string msg

@@ -1,5 +1,6 @@
 int64[] time_data_ns
 int64[] position_data_um
+uint64 feedback_chunk_size
 ---
 string msg
 ---

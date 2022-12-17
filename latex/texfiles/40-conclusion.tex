@@ -2,8 +2,28 @@
 
 Scope should have been different.
 
-Doing this in ROS did not make it easier as was intended. 
+ROS did not make it any easier, quite the contrary. 
 Just another layer of complexity that could have been handled differently.
-Communication between processes is nice for avoiding escalating privileges of entire application, which does not matter for a research project. 
+
+Tons of linker issues. 
+
+Communication between processes is nice for avoiding escalating privileges of entire application, which does not matter for a research project. This was also not without issues when communicating with a slow, the graphical interface, ROS node. The python implementation is just not able to handle the required throughput on my machines. 
 
 Additional knowledge of the CiA protocol would also have helped, as I thought it would be possible to automatically determine control parameters in the device object dictionary.
+
+Further a better mechanical construction would have helped avoid a ton of time spent on things I never intended to be a part of this project. 
+
+Problem inherent in the setup due to encoder being linked as it is. 
+It is directly coupled to the motor output shaft, so does not reflect the actual carriage position. Minor, with belt tightened deviation is estimated to be sub-millimeter. 
+
+However, it is very possible to gain knowledge of the system response through the EtherCAT network. 
+It appears reasonably possible to do this continuously during operation.
+If applied in conjunction with a tuning algorithm developed for each specific EtherCAT device, it appears very likely that the device could be tuned continuously while in operation.
+
+This also applies to the vibrational aspect of the project. Having the frequency content of the executed move compared to the expected response could help identify problems preemptively. 
+
+The selected approach for friction estimation has a few limitations. Firstly the moving mass must be determined either experimentally or calculated, and it cannot be guaranteed that it will be uniform in the full span of motion. 
+In my specific setup the friction varies fairly significantly due to loose dimensional tolerances on various pulley wheels, e.g. concentricity. 
+A better approach would be to utilize an EtherCAT device that provides the effort as feedback. From the effort required and knowledge of the physical setup, the friction could be determined trivially. 
+
+The EtherCAT server capability helper \textit{ethercat\_grant} has a linking issue when mixing normal user-space with elevated permissions. Seems to be the same as \url{https://github.com/shadow-robot/ethercat_grant/issues/10}. 

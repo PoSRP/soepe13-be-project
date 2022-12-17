@@ -115,20 +115,6 @@ class EcatDashboardWidget(QWidget):
         self._cb_move_mode.addItem('Velocity mode')
         self._cb_move_mode.currentIndexChanged.connect(self.cb_move_mode_index_changed)
 
-    def cb_move_mode_index_changed(self):
-        text = self._cb_move_mode.currentText()
-        mode = text.split(' ')[0].lower()
-        self._point_profile_types['active'] = mode
-        mode_header = self._point_profile_types[mode]['capitalized'] + \
-            ' [' + self._point_profile_types[mode]['unit'] + ']'
-        self._lbl_point_mode.setText(mode_header)
-        self._points_model.setHorizontalHeaderLabels(['Time [s]', mode_header])
-        self._action_feedback_model.clear()
-        self._action_feedback_model.setColumnCount(2)
-        self._action_feedback_model.setHorizontalHeaderLabels(['Time [s]', mode_header])
-        self.graph_mode(mode)
-        self.log('Move mode set to: ' + mode)
-
     def handle_service_result_start_network(self, result):
         self.log('Network start result: ' + str(result))
 
@@ -167,54 +153,13 @@ class EcatDashboardWidget(QWidget):
         self._action_future = goal_handle.get_result_async()
         self._action_future.add_done_callback(self.handle_action_result_execute_move)
 
-    def convert_profile_to_point_list(self, times, values, interval_us=1000, frequency=1000):
-        # Frequency and interval will behave as expected, server rate (1000Hz) is not set here
-        # The server will eventually host a parameter for setting it
-        interval_us = 1000
-        # if frequency != 1000:
-        #     interval_us = int(round(1000000 / frequency, 0))
-
-        result_times = []
-        result_values = []
-        input_idx = 0
-
-        while input_idx + 1 < len(times):
-            t0, v0 = times[input_idx] * 1000000, values[input_idx]
-            t1, v1 = times[input_idx + 1] * 1000000, values[input_idx + 1]
-            input_idx += 1
-            dv = v1 - v0
-            dt = t1 - t0
-            time_index = 0
-            
-            while time_index <= dt:
-                # Skip if time point was calculated using previous values
-                if len(result_times) and float((time_index + t0)) / 1000000 == result_times[-1]:
-                    time_index += interval_us
-                    continue
-                
-                if dv == 0:
-                    result_values.append(float(v0))
-                else:
-                    result_values.append(float((dv / dt) * time_index + v0))
-                    
-                result_times.append(float((time_index + t0) / 1000000))
-                time_index += interval_us
-                
-                self.log(f'Point calculated: ({result_times[-1]}, {result_values[-1]})')
-        
-        self.log('Done calculating points')
-        return result_times, result_values
-
     def btn_move_execute_clicked(self):
         if self._action_client is not None:
             self.log('The action client is already active')
             return
         self._action_client = ActionClient(self._node, ExecuteMove, 'execute_move')
-        # if self._cb_slave_mode.currentText() != self._cb_move_mode.currentText():
-        #     self.log('Current move mode does not match with slave mode')
-        #     return
+        
         # TODO: Check if the server is active, abort if not
-
         point_times = []
         point_values = []
         for index in range(self._points_model.rowCount()):
@@ -519,9 +464,6 @@ class EcatDashboardWidget(QWidget):
         self._call_master_node_service(srv)
 
     def _call_master_node_service(self, service_name):
-        self.log('Not implemented')
-        return
-
         _service_info = {}
         _service_info['service_name'] = service_name
         try:

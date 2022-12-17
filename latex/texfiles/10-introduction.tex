@@ -1,9 +1,24 @@
 \section{Introduction}
 
-Advancements in robotics require sophisticated motor control.
-To achieve the required level of real-time precision and performance while decreasing the material requirements for systems with multiple motors placed further apart, various bus-communication protocols for long distance motor control have been introduced. 
+Modern robotics are setting increasingly high demands for advanced actuator and digital control. 
 
-One of such protocols is the EtherCAT network protocol.
-The EtherCAT protocol is capable of utilizing existing standard network controllers for the controlling device and implements specialized slave network devices to achieve exceptionally low jitter and high network refresh rates. 
+Achieving the required level of real-time performance for advanced robotics is a major challenge. 
 
-Something about distributed motor control systems, motors placed far apart while still requiring exact time precision and synchronization of multiple actuators. 
+Systems with distant actuators face implementation issues regarding long runs of current-carrying cables. 
+Electro-magnetic emissions/radiation, interference, compatibility, frequency, exact synchronization ...
+
+Controller computational power demands, the phasing out of PLC's, running modern controllers on standard PCs, Linux real-time systems ...
+
+Dividing responsibility, slaves can handle relatively heavy real-time computations for each device ...
+
+Demand for better real-time, lower cycle times, lower jitter, predictability ...
+
+EtherCAT as the golden goose of layer-2 real-time protocols ...
+
+ROS2 as the golden goose of modern robotics controllers ...
+ROS2 is an open-source back-end framework developed for modern robotics. ... 
+
+EtherCAT is a real-time bus-type communication protocol suitable for high performance, precision distributed control systems. It leverages existing layer-1 ethernet technology, replacing the layer-2 protocol on the entire connected network. 
+Functionally it applies a master-slave structure, handing the responsibility of controlling each actuator in an assembly to the slave device, allowing the master controller to potentially avoid the specifics of advanced motor control. 
+Furthermore it allows a reduction in the cabling required as power and data is carried separately, consequently making it easier to fulfill increasingly stringent requirements for electro-magnetic radiation and interference immunity. 
+EtherCAT is capable of leveraging multiple existing standard network interfaces for the master controller, while the slave device must implement specific hardware to fulfill the real-time requirements of the protocol. 

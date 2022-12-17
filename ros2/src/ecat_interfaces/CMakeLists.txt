@@ -9,10 +9,13 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "action/ExecuteMove.action"
+  "msg/Parameter.msg"
+  
   "srv/NetworkCtrl.srv"
-  "srv/StartNetwork.srv"
-  "srv/StopNetwork.srv"
+  "srv/GetParameters.srv"
+  "srv/SetParameters.srv"
+  
+  "action/ExecuteMove.action"
 )
 
 if(BUILD_TESTING)
